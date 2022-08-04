@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Web Archiving Livestream Performance Results Summary</title>
+		<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+		
+		<style>
+			.button {
+					border: none;
+					color: black;
+					text-align: center;
+					text-decoration: none;
+					display: inline-block;
+					font-size: 14px;
+					padding: 10px 16px;
+					margin: 4px 2px;
+					cursor: pointer;
+				}
+			.darkButton{color: white; background-color: #191919}
+			.darkButton:hover{color: black; background-color: #bebebe;}
+			.lightButton{color: black; background-color: #bebebe;}
+			.lightButton:hover{color: white; background-color: #191919}
+		</style>
+	</head>
+	<body>
+		<!-- QR Tutorial Used: https://medium.com/geekculture/few-ways-to-generate-qr-code-using-javascript-54b6b5220c4f -->
+		<div id="qrcode"></div>
+		
+		<script type="text/javascript">
+			function createQRCode(w=256, h=192, mainColor="#000000", backgroundColor="#FFFFFF")
+			{
+				var fileName = "WAL_Results.html";
+				var queryString = window.location.search;
+				var currentPage = (new URL("./"+ fileName, document.baseURI).href) + queryString;
+				var customQRCodeConfiguration = {
+													text: currentPage,
+													width: w,
+													height: h,
+													colorDark: mainColor,
+													colorLight: backgroundColor,
+
+													correctLevel : QRCode.CorrectLevel.H
+								};
+												
+
+				var qrDiv = document.getElementById("qrcode");
+				var qrcode = new QRCode(qrDiv, customQRCodeConfiguration);
+				
+				//Center the QR code
+				qrDiv.style.textAlign = "center";
+				qrDiv.style.margin = "auto";
+				var qrCodeImage = qrDiv.getElementsByTagName("img")[0];
+				qrCodeImage.style.marginLeft = "auto";
+				qrCodeImage.style.marginRight = "auto";
+				
+				//Move the tooltip from the qr div to qr image
+				qrCodeImage.title = qrDiv.title;
+				qrDiv.removeAttribute("title");
+			}
+			
+			function getResultsObj()
+			{
+				queryString = window.location.search;
+				const searchParams = new URLSearchParams(queryString);
+				if(searchParams.has("d"))
+				{
+				    resultsObj = JSON.parse(atob(searchParams.get("d")));
+				}
+				else
+				{
+				    resultsObj = null;
+				}
+				return resultsObj;
+			}
+			
+			
+			//Tutorial Used: https://www.geeksforgeeks.org/how-to-create-and-download-csv-file-in-javascript/
+			function createResultsFile(resultsObj, downloadBtn)
+			{
+				const convertToCSV = function (resultsObj) 
+				{
+				    csvRows = [];
+				    
+				    colHeaders = [];
+				    if(resultsObj["v"] = "1.0")
+				    {
+				    	///Example row: ["brozzler",10,"0:07:10.221827",3,2,0,0,0,0,0,0,0,0,0,0,0,0,4,1] 
+				    	//More cols may be added if there are other MIME types detected. Need to make the column headings fixed for all MIME types for the next version.
+				    	colHeaders = ["Crawler Name", "Number of URLs Archived", "Completion Times", "Number of 404s", "Number of Other Client or Server Error Responses", "Number of Missing CSS Files", "Number of Missing JavaScript Files", "Number of Missing Image Files", "Number of Missing Video Files", "Number of Missing Audio Files", "Number of Missing text/html Files", "Number of Missing warc/revisit Files"];
+				    }
+
+
+				    //Add column headers to CSV
+				    csvRows.push(colHeaders.join(','));
+				 
+				    // Add the other rows to the csv array
+				    for(let index = 0; index < resultsObj["data"].length; index++)
+				    {
+				    	const row = resultsObj["data"][index];
+				    	csvRows.push(row.join(','));
+				    }
+				 
+				    // Returning a string that can be used for the csv file
+				    return csvRows.join('\n')
+				}
+							
+				const downloadCSV = function (csvStr, resultsObj) {
+				 
+				    // Creating a Blob that has a csv file format
+				    const blob = new Blob([csvStr], { type: 'text/csv' });
+				 
+				    // Creating an object for downloading url
+				    const url = window.URL.createObjectURL(blob)
+				 
+				    // Creating an anchor(a) tag that is used for downloading the file
+				    const a = document.createElement('a')
+				    
+				    a.setAttribute('href', url)
+				 
+				    // Setting the anchor tag attribute for downloading
+				    // and passing the download file name
+				    a.setAttribute('download', resultsObj["date"] + '_Web_Archiving_Livestream_Results.csv');
+				 
+				    // Performing a download with click
+				    a.click()
+				}
+				
+				const getCSV = /*async*/ function (resultsObj) 	{	 
+										    const csvStr = convertToCSV(resultsObj);
+										    downloadCSV(csvStr, resultsObj);
+										}
+										
+				downloadBtn.onclick = function(){getCSV(resultsObj)};
+			}			
+			
+			
+			function createButtons(resultsObj)
+			{
+				var qrDiv = document.getElementById("qrcode");
+				var buttonRow1 = document.createElement("div");
+				buttonRow1.style.textAlign = "center";
+				buttonRow1.style.margin = "auto";
+				
+				var downloadResultsButton = document.createElement("button");
+				downloadResultsButton.type = "button";
+				downloadResultsButton.className = "button darkButton";
+				downloadResultsButton.innerHTML = "Download Results";
+				createResultsFile(resultsObj, downloadResultsButton);
+				
+				var viewRoundButton = document.createElement("button");
+				viewRoundButton.type = "button";			
+				viewRoundButton.className = "button darkButton";
+				viewRoundButton.innerHTML = "Watch Round";
+				if(resultsObj.hasOwnProperty("video"))
+					viewRoundButton.onclick = function(){window.open(resultsObj["video"], "_blank")};
+				
+				buttonRow1.appendChild(downloadResultsButton);			
+				buttonRow1.appendChild(viewRoundButton);				
+				
+				//qrDiv.insertBefore(buttonRow1, qrDiv.children[0]);
+				qrDiv.appendChild(buttonRow1);
+				//qrDiv.appendChild(downloadResultsButton);
+				//qrDiv.appendChild(document.createElement("br"))
+				//qrDiv.appendChild(viewRoundButton);
+				
+			}
+			
+			createQRCode();
+			var resultsObj = getResultsObj();
+			createButtons(resultsObj);
+			
+			
+		</script>
+		
+		<!--
+		<div id="qrcode-2"></div>
+		<script type="text/javascript">
+		var qrcode = new QRCode(document.getElementById("qrcode-2"), {
+			text: "https://webisora.com",
+			width: 128,
+			height: 128,
+			colorDark : "#5868bf",
+			colorLight : "#ffffff",
+			correctLevel : QRCode.CorrectLevel.H
+		});
+		-->
+		</script>
+	</body>
+</html>
