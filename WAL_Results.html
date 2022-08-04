@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Web Archiving Livestream Performance Results Summary</title>
+		<!-- <title>Web Archiving Livestream Performance Results Summary</title> -->
+        <title>Results Mode</title>
 		<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 		
 		<style>
-			.button {
+			.centered{text-align: center; margin: auto}
+            
+            table, td{ border: 1px solid}
+            th{border: 1px solid; background-color: lightgray; color: black}
+            
+            .button {
 					border: none;
 					color: black;
 					text-align: center;
@@ -20,6 +26,10 @@
 			.darkButton:hover{color: black; background-color: #bebebe;}
 			.lightButton{color: black; background-color: #bebebe;}
 			.lightButton:hover{color: white; background-color: #191919}
+            
+            .darkHeading{color: white; background-color: black; display: inline-block}
+            .lightHeading{color: black; background-color: darkgray; display: inline-block}
+            
 		</style>
 	</head>
 	<body>
@@ -43,7 +53,7 @@
 								};
 												
 
-				var qrDiv = document.getElementById("qrcode");
+                var qrDiv = document.getElementById("qrcode");
 				var qrcode = new QRCode(qrDiv, customQRCodeConfiguration);
 				
 				//Center the QR code
@@ -73,7 +83,19 @@
 				return resultsObj;
 			}
 			
-			
+			function getColHeadings(resultsObj)
+            {
+                colHeaders = [];
+                if(resultsObj["v"] = "1.0")
+                {
+                    ///Example row: ["brozzler",10,"0:07:10.221827",3,2,0,0,0,0,0,0,0,0,0,0,0,0,4,1]
+                    //More cols may be added if there are other MIME types detected. Need to make the column headings fixed for all MIME types for the next version.
+                    colHeaders = ["Crawler Name", "Number of URLs Archived", "Completion Times", "Number of 404s", "Number of Other Client or Server Error Responses", "Number of Missing CSS Files", "Number of Missing JavaScript Files", "Number of Missing Image Files", "Number of Missing Video Files", "Number of Missing Audio Files", "Number of Missing text/html Files", "Number of Missing warc/revisit Files"];
+                }
+                
+                return colHeaders;
+            }
+            
 			//Tutorial Used: https://www.geeksforgeeks.org/how-to-create-and-download-csv-file-in-javascript/
 			function createResultsFile(resultsObj, downloadBtn)
 			{
@@ -81,14 +103,7 @@
 				{
 				    csvRows = [];
 				    
-				    colHeaders = [];
-				    if(resultsObj["v"] = "1.0")
-				    {
-				    	///Example row: ["brozzler",10,"0:07:10.221827",3,2,0,0,0,0,0,0,0,0,0,0,0,0,4,1] 
-				    	//More cols may be added if there are other MIME types detected. Need to make the column headings fixed for all MIME types for the next version.
-				    	colHeaders = ["Crawler Name", "Number of URLs Archived", "Completion Times", "Number of 404s", "Number of Other Client or Server Error Responses", "Number of Missing CSS Files", "Number of Missing JavaScript Files", "Number of Missing Image Files", "Number of Missing Video Files", "Number of Missing Audio Files", "Number of Missing text/html Files", "Number of Missing warc/revisit Files"];
-				    }
-
+				    colHeaders = getColHeadings(resultsObj);
 
 				    //Add column headers to CSV
 				    csvRows.push(colHeaders.join(','));
@@ -164,10 +179,111 @@
 				//qrDiv.appendChild(viewRoundButton);
 				
 			}
+            
+            function displayTitleandCrawlerNames(resultsObj)
+            {
+                var commonClassName = "darkHeading";
+                var outerPadding = 40;
+                var totalSpaceUsed = 0;
+                console.log("totalSpaceUsed " +  totalSpaceUsed.toString());
+                
+                var parentDiv = document.createElement("div");
+                parentDiv.style.width = (document.body.clientWidth).toString() + "px";
+                parentDiv.className = "centered " + commonClassName;
+                document.body.insertBefore(document.createElement("br"), document.body.children[0]);
+                document.body.insertBefore(document.createElement("br"), document.body.children[0]);
+                document.body.insertBefore(parentDiv, document.body.children[0]);
+                
+                //Add title
+                var title = document.createElement("h1");
+                title.innerHTML = "Web Archiving Livestream Performance Results Summary";
+                title.className = commonClassName;
+                parentDiv.appendChild(title);
+                totalSpaceUsed += title.getBoundingClientRect()["width"];
+                
+                //Add crawlers' names
+                var crawlerNameArray = [];
+                for(let index = 0; index < resultsObj["data"].length; index++)
+                {
+                    crawlerNameArray.push(document.createElement("h1"));
+                    crawlerNameArray[index].innerHTML = resultsObj["data"][index][0];
+                    crawlerNameArray[index].className = commonClassName;
+                    
+                    if(index < Math.round(resultsObj["data"].length / 2))
+                    {
+                        parentDiv.insertBefore(crawlerNameArray[index], title);
+                    }
+                    else if(index >= Math.round(resultsObj["data"].length / 2))
+                    {
+                        parentDiv.appendChild(crawlerNameArray[index]);
+                    }
+                    totalSpaceUsed += crawlerNameArray[index].getBoundingClientRect()["width"];
+                }
+                
+                //Update the spacing between headings
+                for(let index = 0; index < crawlerNameArray.length; index++)
+                {
+                    console.log("totalSpaceUsed " +  totalSpaceUsed.toString());
+                    var padding = Math.floor((document.body.clientWidth - totalSpaceUsed - outerPadding) / (crawlerNameArray.length + 1 - 1));
+                    if(index < Math.round(crawlerNameArray.length / 2))
+                    {
+                        crawlerNameArray[index].style.paddingRight = padding.toString() + "px";
+                    }
+                    else if(index >= Math.round(crawlerNameArray.length / 2))
+                    {
+                        crawlerNameArray[index].style.paddingLeft = padding.toString() + "px";
+                    }
+                }
+            }
+            
+            function createTable(resultsObj)
+            {
+                var table = document.createElement("table");
+                document.body.appendChild(document.createElement("br"));
+                document.body.appendChild(document.createElement("br"));
+                document.body.appendChild(table);
+                
+                //Add the column headings
+                var columnHeadings = document.createElement("thead");
+                table.appendChild(columnHeadings);
+                columnHeadings.appendChild(document.createElement("tr"));
+                var colHeaders = getColHeadings(resultsObj);
+                for(const colHeading of colHeaders)
+                {
+                    headingElement = document.createElement("th");
+                    headingElement.innerHTML = colHeading;
+                    columnHeadings.children[0].appendChild(headingElement);
+                    
+                }
+                
+                //Add data for the rows
+                for(let index = 0; index < resultsObj["data"].length; index++)
+                {
+                    const row = resultsObj["data"][index];
+                    var currentRow = document.createElement("tr");
+                    table.appendChild(currentRow);
+                    for(const cell of row)
+                    {
+                        var currentCellElement = document.createElement("td");
+                        currentRow.appendChild(currentCellElement);
+                        currentCellElement.innerHTML = cell;
+                        
+                        ///Right align numbers
+                        if(!isNaN(parseInt(cell)))
+                        {
+                            currentCellElement.style.textAlign = "right";
+                        }
+                        
+                    }
+                    
+                }
+            }
 			
 			createQRCode();
 			var resultsObj = getResultsObj();
 			createButtons(resultsObj);
+            displayTitleandCrawlerNames(resultsObj);
+            createTable(resultsObj);
 			
 			
 		</script>
