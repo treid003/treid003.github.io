@@ -30,6 +30,36 @@
             .darkHeading{color: white; background-color: black; display: inline-block}
             .lightHeading{color: black; background-color: darkgray; display: inline-block}
             
+            .positiveResultDiv, .negativeResultDiv{
+                        border: solid;
+                        border-width: 4px;
+                        border-color: black red black red;
+                        margin-left: auto;
+                        margin-right: auto;
+                        position: relative;
+                        display: inline-block;
+            }
+            .negativeResultDiv{border-color: black green black green;}
+            
+            .positiveResultCenterLine, .negativeResultCenterLine{
+                        border: solid;
+                        border-width: 2px;
+                        border-color: green;
+                        width: 0px;
+                        position: absolute;
+                        display: inline-block;
+            }
+            .negativeResultCenterLine{border-color: red}
+            
+            .resultHeading, .resultAxis, .preferredBarSize{display:inline;}
+            .resultHeading{font-size: 2rem;}
+            .resultAxis{font-size: 1.75rem;}
+            .preferredBarSize{font-size: 1.8rem; color: green}
+            .resultDescription{display: inline-block; font-size: 1.5rem; margin:auto; text-align:left; padding-right: 10px;}
+            .resultValue{display: inline-block; font-size: 1.5rem; margin:auto; text-align:right}
+            .crawlerResultDiv{display: inline;}
+            
+            .bar{display:inline-block;}
 		</style>
 	</head>
 	<body>
@@ -37,7 +67,49 @@
 		<div id="qrcode"></div>
 		
 		<script type="text/javascript">
-			function createQRCode(w=256, h=192, mainColor="#000000", backgroundColor="#FFFFFF")
+			function getKnownCrawlerColor(crawlerName, crawlersList=null)
+            {
+                var name = crawlerName.toLowerCase();
+                var knownCrawlersList = ["brozzler", "browsertrix", "wget", "wayback machine", "archive.today", "arquivo.pt"];
+                var colorList = ["lightred", "cyan", "orange", "green", "purple", "pink", "yellow"];
+                if(name == "brozzler")
+                {
+                    return "#6d9eebff";
+                }
+                else if(name == "browsertrix")
+                {
+                    return "#595959ff";
+                }
+                else
+                {
+                    var currentColor = "blue";
+                    if(otherCrawlersList != null)
+                    {
+                        var unknownCounter = 0;
+                        var currentCrawlerIndex = -1;
+                        for(let index = 0; index < crawlersList.length; index++)
+                        {
+                            if(name == currentName)
+                                currentCrawlerIndex = index;
+                        }
+                        
+                        return colorList[currentCrawlerIndex];
+                    }
+                }
+                
+            }
+            
+            
+            function range(stop, startAt=0) {
+                rangeArray = [];
+                for(let i = startAt; i < stop; i++)
+                {
+                    rangeArray.push(i);
+                }
+                return rangeArray;
+            }
+            
+            function createQRCode(w=256, h=192, mainColor="#000000", backgroundColor="#FFFFFF")
 			{
 				var fileName = "WAL_Results.html";
 				var queryString = window.location.search;
@@ -83,10 +155,41 @@
 				return resultsObj;
 			}
 			
+            function getScoringMetrics()
+            {
+                queryString = window.location.search;
+                const searchParams = new URLSearchParams(queryString);
+                if(searchParams.has("s"))
+                {
+                    scoringMetrics = searchParams.get("s").replaceAll(" ", "").split(",");
+                    tempArray = []
+                    for(let i = 0; i < scoringMetrics.length; i++)
+                    {
+                        if(!scoringMetrics[i].includes("-"))
+                        {//Add each scoring metric to the new array
+                            tempArray.push(parseInt(scoringMetrics[i]));
+                        }
+                        else
+                        {//Add the range of scoring metrics to the new array
+                            var begIndex = parseInt(scoringMetrics[i].split("-")[0]); console.log(begIndex);
+                            var endIndex = parseInt(scoringMetrics[i].split("-")[1]); console.log(endIndex);
+                            rangeArray = range(endIndex+1, startAt=begIndex); console.log(rangeArray);
+                            tempArray = tempArray.concat(rangeArray); console.log(tempArray);
+                        }
+                    }
+                    scoringMetrics = tempArray;
+                }
+                else
+                {
+                    scoringMetrics = null;
+                }
+                return scoringMetrics;
+            }
+            
 			function getColHeadings(resultsObj)
             {
                 colHeaders = [];
-                if(resultsObj["v"] = "1.0")
+                if(resultsObj["v"] == "1.0")
                 {
                     ///Example row: ["brozzler",10,"0:07:10.221827",3,2,0,0,0,0,0,0,0,0,0,0,0,0,4,1]
                     //More cols may be added if there are other MIME types detected. Need to make the column headings fixed for all MIME types for the next version.
@@ -149,7 +252,7 @@
 			}			
 			
 			
-			function createButtons(resultsObj)
+			function createButtons(resultsObj, scoringMetrics, scoreMultiplierList)
 			{
 				var qrDiv = document.getElementById("qrcode");
 				var buttonRow1 = document.createElement("div");
@@ -170,14 +273,61 @@
 					viewRoundButton.onclick = function(){window.open(resultsObj["video"], "_blank")};
 				
 				buttonRow1.appendChild(downloadResultsButton);			
-				buttonRow1.appendChild(viewRoundButton);				
-				
-				//qrDiv.insertBefore(buttonRow1, qrDiv.children[0]);
+				buttonRow1.appendChild(viewRoundButton);
 				qrDiv.appendChild(buttonRow1);
-				//qrDiv.appendChild(downloadResultsButton);
-				//qrDiv.appendChild(document.createElement("br"))
-				//qrDiv.appendChild(viewRoundButton);
-				
+                
+				var resultButtons = document.createElement("div");
+                resultButtons.style.textAlign = "center";
+                resultButtons.style.margin = "auto";
+                qrDiv.appendChild(resultButtons);
+                
+                var prevResultButton = document.createElement("button");
+                prevResultButton.type = "button";
+                prevResultButton.className = "button darkButton";
+                prevResultButton.innerHTML = "Previous Metric";
+                if(scoringMetrics != null && scoringMetrics.length > 1)
+                {
+                    prevResultButton.onclick = function(){
+                        var resultContainer = document.getElementById("current_result");
+                        var currentScoringMetricIndex = 0;
+                        if(resultContainer != null)
+                            currentScoringMetricIndex = parseInt(resultContainer.getAttribute("data-scoringMetricIndex"));
+                        
+                        var prevScoringMetricIndex = scoringMetrics.length-1; //This is set to the last metric so that it will loop to the last metric if the current metric is the first metric
+                        if( (currentScoringMetricIndex-1) >= 0)
+                            prevScoringMetricIndex = currentScoringMetricIndex - 1;
+                        
+                        console.log(prevScoringMetricIndex, scoringMetrics);
+                        document.getElementById("current_result").remove();
+                        displayResult(resultsObj, scoringMetrics, prevScoringMetricIndex, scoreMultiplierList);
+                    };
+                }
+                
+                
+                var nextResultButton = document.createElement("button");
+                nextResultButton.type = "button";
+                nextResultButton.className = "button darkButton";
+                nextResultButton.innerHTML = "Next Metric";
+                if(scoringMetrics != null && scoringMetrics.length > 1)
+                {
+                    nextResultButton.onclick = function(){
+                        var resultContainer = document.getElementById("current_result");
+                        var currentScoringMetricIndex = 0;
+                        if(resultContainer != null)
+                            currentScoringMetricIndex = parseInt(resultContainer.getAttribute("data-scoringMetricIndex"));
+                        
+                        var nextScoringMetricIndex = 0; //This is set to 0 so that it will loop to the first metric if the current metric is the last metric
+                        if( (currentScoringMetricIndex+1) < scoringMetrics.length)
+                            nextScoringMetricIndex = currentScoringMetricIndex + 1;
+                        
+                        console.log(nextScoringMetricIndex, scoringMetrics);
+                        document.getElementById("current_result").remove();
+                        displayResult(resultsObj, scoringMetrics, nextScoringMetricIndex, scoreMultiplierList);
+                    };
+                }
+                
+                resultButtons.appendChild(prevResultButton);
+                resultButtons.appendChild(nextResultButton);
 			}
             
             function displayTitleandCrawlerNames(resultsObj)
@@ -185,7 +335,6 @@
                 var commonClassName = "darkHeading";
                 var outerPadding = 40;
                 var totalSpaceUsed = 0;
-                console.log("totalSpaceUsed " +  totalSpaceUsed.toString());
                 
                 var parentDiv = document.createElement("div");
                 parentDiv.style.width = (document.body.clientWidth).toString() + "px";
@@ -223,7 +372,6 @@
                 //Update the spacing between headings
                 for(let index = 0; index < crawlerNameArray.length; index++)
                 {
-                    console.log("totalSpaceUsed " +  totalSpaceUsed.toString());
                     var padding = Math.floor((document.body.clientWidth - totalSpaceUsed - outerPadding) / (crawlerNameArray.length + 1 - 1));
                     if(index < Math.round(crawlerNameArray.length / 2))
                     {
@@ -279,11 +427,438 @@
                 }
             }
 			
+            function getMetricUpperLimit(maxValue)
+            {
+                var maxValueStr = 0;
+                var metricLimit = 0;
+                if(Math.floor(maxValue) >= 0)
+                {
+                    maxValueStr = maxValue.toString().replace(",", "").split(".")[0];
+                    metricLimit = maxValue + Math.pow(10, maxValueStr.length - 1);
+                }
+                else
+                {
+                    maxValueStr = maxValue.toString().replace(",", "").split(".")[1];
+                    metricLimit = maxValue + Math.pow(10, -(maxValueStr.length - 1));
+                }
+                
+                return metricLimit;
+            }
+            
+            function getScoreObj(resultsObj, defaultMetricValues, performanceMetricIndex, scoreMultiplier, maxMetricVal=-1)
+            {
+                var scoreObj = {};
+                var colHeaders = getColHeadings(resultsObj);
+                var headingLowerCase = colHeaders[performanceMetricIndex].toLowerCase();
+                
+                //Get metric name
+                var metricName = "Invalid Metric";
+                if(headingLowerCase.includes("completion time"))
+                {
+                    metricName = "Speedrun Time";
+                }
+                else if(headingLowerCase.includes("number of 404s"))
+                {
+                    metricName = "Number of 404s";
+                }
+                else if(headingLowerCase.includes("client or server error responses"))
+                {
+                    metricName = "Number of 4XX or 5XX HTTP Status Codes";
+                }
+                else if(headingLowerCase.includes("files"))
+                {
+                    metricName = colHeaders[performanceMetricIndex].replace("Number of ", "");
+                }
+                else
+                {
+                    metricName = colHeaders[performanceMetricIndex];
+                }
+                scoreObj["metric_name"] = metricName;
+                
+                
+                scoreObj["crawler_list"] = [];
+                scoreObj["metric_upper_limit"] = 0;
+                
+                
+                
+                if(colHeaders[performanceMetricIndex].includes("Completion Time"))
+                {
+                    scoreObj["prefer_high_metric_value"] = false;
+                    var numPages = resultsObj["data"][0][1];
+                    scoreObj["fixed_max_metric_value"] = defaultMetricValues["max_time_per_page"] * numPages;
+                    for(let crawlerIndex = 0; crawlerIndex < resultsObj["data"].length; crawlerIndex++)
+                    {
+                        var currentCrawler = {};
+                        var crawlerName = resultsObj["data"][crawlerIndex][0];
+                        currentCrawler["crawler_name"] = crawlerName;
+                        
+                        //Original metric without the fraction of a second
+                        var speedrunTimeStr = resultsObj["data"][crawlerIndex][performanceMetricIndex].split(".")[0];
+                        
+                        //Alternative metric value for the time that was will be converted to seconds
+                        ///Convert the datetime string to seconds for each crawler
+                        var timeArray = speedrunTimeStr.split(":").reverse();
+                        
+                        ////Add the seconds (and exlude the fraction of a second)
+                        currentCrawler["metric_value"] = Math.floor(timeArray[0]);
+                        
+                        ////Add minutes
+                        if(timeArray.length > 1)
+                            currentCrawler["metric_value"] += timeArray[1] * 60;
+                            
+                        ////Add hours
+                        if(timeArray.length > 2)
+                            currentCrawler["metric_value"] += timeArray[2] * 60 * 60;
+                            
+                        ////Add days
+                        if(timeArray.length > 3)
+                            currentCrawler["metric_value"] += timeArray[3] * 60 * 60 * 24;
+                        
+                        
+                        ///Compute the score for the metric
+                        if(maxMetricVal == -1)
+                        {
+                            var numPages = resultsObj["data"][0][1];
+                            currentCrawler["metric_score"] = Math.abs(scoreObj["fixed_max_metric_value"] - currentCrawler["metric_value"]) * scoreMultiplier;
+                        }
+                        else
+                        {
+                            currentCrawler["metric_score"] = Math.abs(maxMetricVal - currentCrawler["metric_value"]) * scoreMultiplier;
+                        }
+                        
+                        if(currentCrawler["metric_value"] > scoreObj["metric_upper_limit"])
+                        {
+                            scoreObj["metric_upper_limit"] = currentCrawler["metric_value"];
+                        }
+                        
+                        //Add the unit of time to the metric value
+                        currentCrawler["metric_value"] = currentCrawler["metric_value"].toString() + "s";
+                        
+                        //Add the crawler's score object to scoreObj
+                        scoreObj["crawler_list"].push(currentCrawler);
+                    }
+                    
+                    //Get the upper limit for the score
+                    scoreObj["metric_upper_limit"] = getMetricUpperLimit(scoreObj["metric_upper_limit"]);
+                    
+                    //Add the unit of time to the metric value
+                    scoreObj["metric_upper_limit"] = scoreObj["metric_upper_limit"].toString() + "s";
+                }
+                else if(headingLowerCase.includes("number of 404s") || headingLowerCase.includes("error responses") || headingLowerCase.includes("missing"))
+                {
+                    console.log("here");
+                    scoreObj["prefer_high_metric_value"] = false;
+                    for(let crawlerIndex = 0; crawlerIndex < resultsObj["data"].length; crawlerIndex++)
+                    {
+                        var currentCrawler = {};
+                        var crawlerName = resultsObj["data"][crawlerIndex][0];
+                        currentCrawler["crawler_name"] = crawlerName;
+                        currentCrawler["metric_value"] = resultsObj["data"][crawlerIndex][performanceMetricIndex];
+                        
+                        ///Compute the score for the metric
+                        currentCrawler["metric_score"] = currentCrawler["metric_value"] * scoreMultiplier * -1;
+                        
+                        if(currentCrawler["metric_value"] > scoreObj["metric_upper_limit"])
+                        {
+                            scoreObj["metric_upper_limit"] = currentCrawler["metric_value"];
+                        }
+                        
+                        //Add the crawler's score object to scoreObj
+                        scoreObj["crawler_list"].push(currentCrawler);
+                    }
+                    
+                    //Get the upper limit for the score
+                    scoreObj["metric_upper_limit"] = getMetricUpperLimit(scoreObj["metric_upper_limit"]);
+                }
+                
+                
+                return scoreObj;
+            }
+            
+            //May remove this function if I want it all to be included in displayResult
+            function createVisualization(scoreObj)
+            {
+                
+            }
+            
+            function displayResult(resultsObj, scoringMetrics, scoringMetricIndex, scoreMultiplierList, width=0, height=0)
+            {
+                var defaultMetricValues = {"max_time_per_page": 5 * 60};
+                var defaultHeight = 40;
+                var defaultBorderWidth = 4;
+                
+                
+                var performanceMetricIndex = scoringMetrics[scoringMetricIndex];
+                var scoreObj = getScoreObj(resultsObj, defaultMetricValues, performanceMetricIndex, scoreMultiplierList[scoringMetricIndex]);
+
+                var preferredBarSize = "";
+                var barClass = "";
+                var middleAxisValue = 0;
+                if(scoreObj["prefer_high_metric_value"])
+                {
+                    preferredBarSize = "Larger Bar is Better";
+                    barClass = "positiveResultDiv";
+                    lineClass = "positiveResultCenterLine";
+                }
+                else
+                {
+                    preferredBarSize = "Smaller Bar is Better";
+                    barClass = "negativeResultDiv";
+                    lineClass = "negativeResultCenterLine";
+                }
+                middleAxisValue = scoreObj["metric_upper_limit"];
+                
+                var resultContainer = document.createElement("div");
+                resultContainer.id = "current_result";
+                resultContainer.setAttribute("data-scoringMetricIndex", scoringMetricIndex);
+                document.body.appendChild(resultContainer);
+                resultContainer.appendChild(document.createElement("br"));
+                resultContainer.appendChild(document.createElement("br"));
+                
+                var resultLineDiv = document.createElement("div");
+                resultLineDiv.className = "centered";
+                resultLineDiv.style.position = "relative";
+                resultLineDiv.style.width = (document.body.clientWidth).toString() + "px";
+                resultContainer.appendChild(resultLineDiv);
+                
+                var barDiv = document.createElement("div");
+                barDiv.className = barClass;
+                
+                if(width == 0)
+                {
+                    width = Math.floor(document.body.clientWidth * 0.5);
+                }
+                if(height == 0)
+                {
+                    height = defaultHeight;
+                }
+                barDiv.style.width = width.toString() + "px";
+                barDiv.style.height = height.toString() + "px";
+                
+                resultLineDiv.appendChild(barDiv);
+                
+                var centerLine = document.createElement("div");
+                centerLine.className = lineClass;
+                centerLine.style.height = barDiv.style.height;
+                centerLine.style.left = Math.floor( (document.body.clientWidth - defaultBorderWidth) / 2 ).toString() + "px"; //Center the line (the border width will make the line slightly off from the center)
+                resultLineDiv.insertBefore(centerLine, barDiv);
+                
+                /// Display average or total for result for each crawler (when >2 crawlers can use vertical bar chart with d3)
+                //
+                var resultHeadingDiv = document.createElement("div");
+                resultHeadingDiv.className = "centered";
+                resultHeadingDiv.style.position = "relative";
+                resultHeadingDiv.style.width = (document.body.clientWidth).toString() + "px";
+                resultContainer.insertBefore(resultHeadingDiv,resultLineDiv);
+                
+                totalSpaceUsed = 0;
+                //Add crawlers' names
+                var resultHeadingClass = "resultHeading";
+                var numCrawlers = resultsObj["data"].length;
+                for(let index = 0; index < numCrawlers; index++)
+                {
+                    var currentCrawlerNameDiv = document.createElement("h1");
+                    var crawlerName = resultsObj["data"][index][0];
+                    currentCrawlerNameDiv.innerHTML = crawlerName;
+                    currentCrawlerNameDiv.className = resultHeadingClass;
+                    currentCrawlerNameDiv.style.color = getKnownCrawlerColor(crawlerName);
+                    resultHeadingDiv.appendChild(currentCrawlerNameDiv);
+                    
+                    totalSpaceUsed += currentCrawlerNameDiv.getBoundingClientRect()["width"];
+                }
+                
+                //Add metric name
+                var metricTitle = document.createElement("h1");
+                metricTitle.innerHTML = scoreObj["metric_name"];
+                metricTitle.className = resultHeadingClass;
+                var metricTitleIndex = Math.ceil(resultHeadingDiv.children.length / 2);
+                resultHeadingDiv.insertBefore(metricTitle, resultHeadingDiv.children[metricTitleIndex]);
+                totalSpaceUsed += metricTitle.getBoundingClientRect()["width"];
+                
+                ///Adjust the spacing between the result headings
+                var spacingBetweenHeadings = Math.floor((width - totalSpaceUsed) / (numCrawlers + 1 - 1));
+                for(let index = 0; index < numCrawlers; index++)
+                {
+                    resultHeadingDiv.children[index].style.paddingRight = spacingBetweenHeadings.toString() + "px";
+                }
+                
+                //Add the axis numbers for the gaming visualization
+                var resultAxisDiv = document.createElement("div");
+                resultAxisDiv.className = "centered";
+                resultAxisDiv.style.position = "relative";
+                resultAxisDiv.style.width = (document.body.clientWidth).toString() + "px";
+                resultContainer.appendChild(resultAxisDiv);
+                
+                totalSpaceUsed = 0;
+                
+                var resultAxisClass = "resultAxis";
+                var numAxisValues = 3;
+                for(let index = 0; index < numAxisValues; index++)
+                {
+                    var currentAxisValueDiv = document.createElement("h2");
+                    
+                    if(index != 1)
+                        currentAxisValueDiv.innerHTML = 0;
+                    else
+                        currentAxisValueDiv.innerHTML = middleAxisValue;
+                    
+                    currentAxisValueDiv.className = resultAxisClass;
+                    resultAxisDiv.appendChild(currentAxisValueDiv);
+                    
+                    totalSpaceUsed += currentAxisValueDiv.getBoundingClientRect()["width"];
+                }
+                
+                ///Adjust the spacing between the axis values
+                var spacingBetweenAxisValues = Math.floor((width - totalSpaceUsed) / (numAxisValues - 1));
+                for(let index = 0; index < numCrawlers; index++)
+                {
+                    resultAxisDiv.children[index].style.paddingRight = spacingBetweenAxisValues.toString() + "px";
+                }
+                
+                //Display the preferred bar size
+                var preferredBarSizeDiv = document.createElement("div");
+                preferredBarSizeDiv.className = "centered";
+                preferredBarSizeDiv.style.position = "relative";
+                preferredBarSizeDiv.style.width = (document.body.clientWidth).toString() + "px";
+                preferredBarSizeDiv.appendChild(document.createElement("h1"))
+                preferredBarSizeDiv.children[0].innerHTML = preferredBarSize;
+                preferredBarSizeDiv.children[0].className = "preferredBarSize";
+                resultContainer.appendChild(preferredBarSizeDiv);
+                
+                //Display speedrun time
+                var resultsDiv = document.createElement("div");
+                resultsDiv.className = "centered";
+                resultsDiv.style.position = "relative";
+                resultsDiv.style.width = (document.body.clientWidth).toString() + "px";
+                resultContainer.appendChild(resultsDiv);
+                
+                totalSpaceUsed = 0;
+                
+                var resultHeadingClass = "resultHeading";
+                var numCrawlers = resultsObj["data"].length;
+                for(let index = 0; index < numCrawlers; index++)
+                {
+                    var crawlerResultDiv = document.createElement("div");
+                    crawlerResultDiv.className = "crawlerResultDiv";
+                    resultsDiv.appendChild(crawlerResultDiv);
+
+                    var crawlerResultDescriptionDiv = document.createElement("div");
+                    crawlerResultDescriptionDiv.className = "crawlerResultDiv";
+                    crawlerResultDescriptionDiv.appendChild(document.createElement("p"));
+                    crawlerResultDescriptionDiv.children[0].innerHTML = scoreObj["metric_name"] + ": " + "<br>";
+                    if(scoreObj.hasOwnProperty("fixed_max_metric_value"))
+                        crawlerResultDescriptionDiv.children[0].innerHTML += "Maximum " + scoreObj["metric_name"] + ": " + "<br>";
+                    crawlerResultDescriptionDiv.children[0].innerHTML += "Points From Metric: ";
+                    crawlerResultDescriptionDiv.children[0].className = "resultDescription";
+                    crawlerResultDiv.appendChild(crawlerResultDescriptionDiv);
+                    //crawlerResultDiv.style.width = Math.floor(crawlerResultDescriptionDiv.getBoundingClientRect()["width"]).toString() + "px";
+                    
+                    var crawlerResultValueDiv = document.createElement("div");
+                    crawlerResultValueDiv.appendChild(document.createElement("p"));
+                    crawlerResultValueDiv.className = "crawlerResultDiv";
+                    
+                    var currentScore = scoreObj["crawler_list"][index]["metric_score"];
+                    var scoreColor = "";
+                    if(currentScore > 0)
+                        scoreColor = "green";
+                    else if(currentScore < 0)
+                        scoreColor =  "red";
+                    
+                    crawlerResultValueDiv.children[0].innerHTML = scoreObj["crawler_list"][index]["metric_value"] + "<br>";
+                    if(scoreObj.hasOwnProperty("fixed_max_metric_value"))
+                        crawlerResultValueDiv.children[0].innerHTML += scoreObj["fixed_max_metric_value"] + "s" + "<br>";
+                        
+                    crawlerResultValueDiv.children[0].innerHTML += '<span style="color:' + scoreColor + '">' + currentScore.toString() + "</span>";
+                    crawlerResultValueDiv.children[0].className = "resultValue";
+                    crawlerResultDiv.appendChild(crawlerResultValueDiv);
+                    
+                    totalSpaceUsed += crawlerResultDiv.getBoundingClientRect()["width"];
+                }
+                
+                ///Adjust the spacing between the
+                var spacingBetweenAxisValues = Math.floor((width - totalSpaceUsed) / (numCrawlers - 1));
+                for(let index = 0; index < numCrawlers - 1; index++)
+                {
+                    resultsDiv.children[index].style.paddingRight = spacingBetweenAxisValues.toString() + "px";
+                }
+                
+                //Display the bars for the crawlers
+                totalSpaceUsed = 0;
+                //Add crawlers' names
+                var barClass = "bar";
+                var maxBarWidth = width;
+                var maxVal = parseInt(middleAxisValue) * 2;
+                for(let index = 0; index < numCrawlers; index++)
+                {
+                    var currentBar = document.createElement("div");
+                    var currentMetricValue = parseInt(scoreObj["crawler_list"][index]["metric_value"]);
+                    var barWidth = Math.floor((currentMetricValue / maxVal) * maxBarWidth);
+                    var crawlerName = scoreObj["crawler_list"][index]["crawler_name"];
+                    currentBar.style.width = barWidth.toString() + "px";
+                    currentBar.style.height = barDiv.style.height;
+                    currentBar.className = barClass;
+                    currentBar.style.backgroundColor = getKnownCrawlerColor(crawlerName);
+                    
+                    barDiv.appendChild(currentBar);
+                    
+                    totalSpaceUsed += currentBar.getBoundingClientRect()["width"];
+                }
+                resultLineDiv.insertBefore(barDiv, resultLineDiv.children[0]);
+                
+                ///Adjust the spacing between the
+                var spacingBetweenAxisValues = Math.floor((width - totalSpaceUsed) / (numCrawlers - 1));
+                for(let index = 0; index < numCrawlers - 1; index++)
+                {
+                    barDiv.children[index].style.marginRight = spacingBetweenAxisValues.toString() + "px";
+                }
+                
+            }
+            
+            function createDefaultScoreMultipliers(scoringMetrics)
+            {
+                scoreMultiplierList = [];
+                for(let scoringMetricIndex = 0; scoringMetricIndex < scoringMetrics.length; scoringMetricIndex++)
+                {
+                    var performanceMetricIndex = scoringMetrics[scoringMetricIndex];
+                    if(performanceMetricIndex == 2)
+                    {
+                        scoreMultiplierList.push(1);
+                    }
+                    else if(performanceMetricIndex == 4 || performanceMetricIndex == 7)
+                    {
+                        scoreMultiplierList.push(50);
+                    }
+                    else if(performanceMetricIndex == 3 || performanceMetricIndex == 8 || performanceMetricIndex == 9 || performanceMetricIndex == 11)
+                    {
+                        scoreMultiplierList.push(100);
+                    }
+                    else if(performanceMetricIndex == 5)
+                    {
+                        scoreMultiplierList.push(200);
+                    }
+                    else if(performanceMetricIndex == 6)
+                    {
+                        scoreMultiplierList.push(300);
+                    }
+                    else if(performanceMetricIndex == 10)
+                    {
+                        scoreMultiplierList.push(500);
+                    }
+                }
+                
+                return scoreMultiplierList;
+            }
+            
+            
 			createQRCode();
 			var resultsObj = getResultsObj();
-			createButtons(resultsObj);
+            var scoringMetrics = getScoringMetrics();
+            var scoreMultiplierList = createDefaultScoreMultipliers(scoringMetrics);
+			createButtons(resultsObj, scoringMetrics, scoreMultiplierList);
             displayTitleandCrawlerNames(resultsObj);
-            createTable(resultsObj);
+            //createTable(resultsObj);
+            
+            displayResult(resultsObj, scoringMetrics, 0, scoreMultiplierList);
 			
 			
 		</script>
