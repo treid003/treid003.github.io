@@ -59,6 +59,8 @@
             .resultValue{display: inline-block; font-size: 1.5rem; margin:auto; text-align:right}
             .crawlerResultDiv{display: inline;}
             
+            .score{display: inline-block; margin-top:0px; margin-bottom:0px}
+            
             .bar{display:inline-block;}
 		</style>
 	</head>
@@ -67,7 +69,9 @@
 		<div id="qrcode"></div>
 		
 		<script type="text/javascript">
-			function getKnownCrawlerColor(crawlerName, crawlersList=null)
+            const delay = ms => new Promise(res => setTimeout(res, ms));
+            
+            function getKnownCrawlerColor(crawlerName, crawlersList=null)
             {
                 var name = crawlerName.toLowerCase();
                 var knownCrawlersList = ["brozzler", "browsertrix", "wget", "wayback machine", "archive.today", "arquivo.pt"];
@@ -252,7 +256,7 @@
 			}			
 			
 			
-			function createButtons(resultsObj, scoringMetrics, scoreMultiplierList)
+			function createButtons(resultsObj, scoringMetrics, scoreMultiplierList, viewedScoresList)
 			{
 				var qrDiv = document.getElementById("qrcode");
 				var buttonRow1 = document.createElement("div");
@@ -299,7 +303,7 @@
                         
                         console.log(prevScoringMetricIndex, scoringMetrics);
                         document.getElementById("current_result").remove();
-                        displayResult(resultsObj, scoringMetrics, prevScoringMetricIndex, scoreMultiplierList);
+                        displayResult(resultsObj, scoringMetrics, prevScoringMetricIndex, scoreMultiplierList, viewedScoresList);
                     };
                 }
                 
@@ -322,7 +326,7 @@
                         
                         console.log(nextScoringMetricIndex, scoringMetrics);
                         document.getElementById("current_result").remove();
-                        displayResult(resultsObj, scoringMetrics, nextScoringMetricIndex, scoreMultiplierList);
+                        displayResult(resultsObj, scoringMetrics, nextScoringMetricIndex, scoreMultiplierList, viewedScoresList);
                     };
                 }
                 
@@ -335,11 +339,13 @@
                 var commonClassName = "darkHeading";
                 var outerPadding = 40;
                 var totalSpaceUsed = 0;
+                var qrCodeDiv = document.body.children[0];
+                var numCrawlers = resultsObj["data"].length;
                 
                 var parentDiv = document.createElement("div");
                 parentDiv.style.width = (document.body.clientWidth).toString() + "px";
                 parentDiv.className = "centered " + commonClassName;
-                document.body.insertBefore(document.createElement("br"), document.body.children[0]);
+                //document.body.insertBefore(document.createElement("br"), document.body.children[0]);
                 document.body.insertBefore(document.createElement("br"), document.body.children[0]);
                 document.body.insertBefore(parentDiv, document.body.children[0]);
                 
@@ -382,6 +388,75 @@
                         crawlerNameArray[index].style.paddingLeft = padding.toString() + "px";
                     }
                 }
+                
+                //Add the lines for the scores
+                /* Example code
+                 <div class="centered darkHeading" style="width: 1904px;">
+                    <h1 class="darkHeading" style="padding-right: 389px;">Brozzler</h1>
+                    <h1 class="darkHeading">Web Archiving Livestream Performance Results Summary</h1>
+                    <h1 class="darkHeading" style="padding-left: 389px;">Browsertrix</h1>
+                 </div>
+                 <br> //Only one br instead of two
+                    // Need to have the score text as inline-block, no margins at top and bottom and need to compute the left margin based on the width that is taken up by the elements on the same line (use their widths and possibly left margin values)
+                    <h1 style="display:inline-block; margin-top:0px; margin-bottom:0px; margin-left:20px">Score:</h1>
+                    // The margin left for the point values are dependent on which score is higher the total or the current points
+                        ///If it is the total points then take the left margin and width of "Score:" text and add it to the width of (total score width - new points width)
+                    <h1 style="display:inline-block; margin-top:0px; margin-bottom:0px; margin-left:80px">0</h1>
+                    <h1 style="display:inline-block; margin-top:0px; margin-bottom:0px; margin-left:1500px">Score:</h1>
+                    <h1 style="display:inline-block; margin-top:0px; margin-bottom:0px; margin-left:80px">0</h1>
+                    <br>
+                    <h1 style="display:inline-block; margin-top:0px; margin-bottom:0px; margin-left:105px; color:green">
+                        + 2,570
+                    </h1>
+                    <h1 style="display:inline-block; margin-top:0px; margin-bottom:0px; margin-left:1585px; color:green">
+                        + 2,723
+                    </h1>
+                    <div id="qrcode" style="text-align: center; margin: auto;"><canvas width="256" height="192" style="display: none;"></canvas><img title="https://treid003.github.io/WAL_Results.html?d=eyJ2IjoiMS4wIiwiZGF0ZSI6IjIwMjItMDctMjciLCJ2aWRlbyI6Imh0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9TTVqTDd1SFFDZncmdD0yMnMiLCJkYXRhIjpbWyJCcm96emxlciIsMTAsIjA6MDc6MTAuMjIxODI3IiwzLDIsMCwwLDAsMCwwLDQsMV0sWyJCcm93c2VydHJpeCIsMTAsIjA6MDQ6MzcuMDMxNTIwIiwyLDAsMCwwLDAsMCwwLDAsMF1dfQ==&amp;s=2,5-10"
+                 */
+                ///Currently here
+                var qrCodeDivChildIndex = 2;
+                var scoreClass = "score";
+                var spaceBetweenTextAndValue = 10;
+                var scoreDiv = document.createElement("div");
+                document.body.insertBefore(scoreDiv, qrCodeDiv);
+                qrCodeDivChildIndex += 1;
+                scoreDiv.style.width = parentDiv.style.width;
+                scoreDiv.id = "total_scores";
+                var newPointsDiv = scoreDiv.cloneNode(true);
+                newPointsDiv.id = "metric_points";
+                document.body.insertBefore(newPointsDiv, qrCodeDiv);
+                qrCodeDivChildIndex += 1;
+                
+                
+                totalSpaceUsed = 0;
+                
+                var scoreOneText = document.createElement("h1");
+                scoreDiv.appendChild(scoreOneText);
+                scoreOneText.className = scoreClass;
+                scoreOneText.innerHTML = "Score:";
+                totalSpaceUsed += scoreOneText.getBoundingClientRect()["width"] * numCrawlers;
+                scoreOneText.style.paddingLeft = Math.floor(outerPadding / 2).toString() + "px";
+                var scoreOneValue = scoreOneText.cloneNode(true);
+                scoreDiv.appendChild(scoreOneValue);
+                scoreOneValue.innerHTML = "0";
+                totalSpaceUsed += scoreOneValue.getBoundingClientRect()["width"] * numCrawlers;
+                scoreOneValue.style.paddingLeft = spaceBetweenTextAndValue.toString() + "px";
+                var scoreOneMetricPoints = scoreOneValue.cloneNode(true);
+                scoreOneMetricPoints.innerHTML = "";
+                newPointsDiv.appendChild(scoreOneMetricPoints);
+                
+                var scoreTwoText = scoreOneText.cloneNode(true);
+                scoreDiv.appendChild(scoreTwoText);
+                scoreTwoText.style.paddingLeft = "0px";
+                var scoreTwoValue = scoreOneValue.cloneNode(true);
+                scoreDiv.appendChild(scoreTwoValue);
+                var scoreTwoMetricPoints = scoreOneMetricPoints.cloneNode(true);
+                newPointsDiv.appendChild(scoreTwoMetricPoints);
+                
+                ///Adjust the spacing between the total scores
+                var padding = Math.floor((parseInt(scoreDiv.style.width) - totalSpaceUsed - spaceBetweenTextAndValue*numCrawlers) / (numCrawlers - 1));
+                scoreOneValue.style.paddingRight = padding.toString() + "px";
+                
             }
             
             function createTable(resultsObj)
@@ -546,7 +621,6 @@
                 }
                 else if(headingLowerCase.includes("number of 404s") || headingLowerCase.includes("error responses") || headingLowerCase.includes("missing"))
                 {
-                    console.log("here");
                     scoreObj["prefer_high_metric_value"] = false;
                     for(let crawlerIndex = 0; crawlerIndex < resultsObj["data"].length; crawlerIndex++)
                     {
@@ -581,7 +655,185 @@
                 
             }
             
-            function displayResult(resultsObj, scoringMetrics, scoringMetricIndex, scoreMultiplierList, width=0, height=0)
+            const updateScore = async(resultsObj, scoreObj, spaceBetweenTextAndValue=10, scoreAnimationDelay=1.5) => {
+                /**
+                    When adjusting the padding:
+                        1. Check if the total score is larger than the points for the metric
+                            1.1 If the total score is larger, then the padding on the right (if score after median) and the previous element's right padding (if score before median) does not need to be updated for the total score line
+                            1.2 If the total score is smaller, then the padding on the right or the previous element's right padding will need to be changed
+                        2. Before adjusting the padding need to store the previous right and left padding for the current total score and store the right padding for the previous total score element
+                        3. Compute the difference between the string widths for the scores
+                        4. Use the string widths to determine how many pixels that one of the scores need to be shifted
+                            4.1 Update the left padding for the smallest score
+                            4.2 Two possible updates needed for adjusting padding
+                                4.2.1 If the total is larger, then stop at 4.1, the right padding for the smaller score will stay the same
+                                4.2.2 If the total is smaller, then two possible changes:
+                                    4.2.2.1 If the total is on the left side of the median, then reduce the right padding for the total and the metric points (this results in left alignment of the test)
+                                    4.2.2.2 If the total is on the right side of the median, then reduce the right padding for the previous total and metric points so that the numbers for the current points are right aligned
+                 */
+                var numCrawlers = resultsObj["data"].length;
+                var medianIndex = Math.ceil(numCrawlers / 2) - 1;
+                for(let index = 0; index < numCrawlers; index++)
+                {
+                    //Update the score for the current crawler
+                    var metricPointsElement = document.getElementById("metric_points").children[index];
+                    var totalScoreIndex = (index + 1) * 2 - 1;
+                    var totalScoreElement = document.getElementById("total_scores").children[totalScoreIndex];
+                    var totalScoreTextElement = document.getElementById("total_scores").children[totalScoreIndex - 1];
+                    
+                    var metricPointsValue = scoreObj["crawler_list"][index]["metric_score"];
+                    var totalScore = parseInt(totalScoreElement.innerHTML);
+                    
+                    
+                    operatorStr = "";
+                    if(metricPointsValue > 0)
+                    {
+                        operatorStr = "+";
+                        metricPointsElement.style.color = "green";
+                    }
+                    else if(metricPointsValue < 0)
+                    {
+                        
+                        operatorStr = "-";
+                        metricPointsElement.style.color = "red";
+                    }
+                    else
+                    {
+                        metricPointsElement.style.color = "black";
+                    }
+                    metricPointsElement.innerHTML = operatorStr;
+
+                    ///Setup before adjusting the padding
+                    var prevTotalScoreElement = null;
+                    var prevMetricScoreElement = null;
+                    var spaceBetweenScores = "0px";
+                    if(index > 0)
+                    {
+                        prevTotalScoreElement = document.getElementById("total_scores").children[totalScoreIndex - 2];
+                        prevMetricScoreElement = document.getElementById("metric_points").children[index - 1];
+                        spaceBetweenScores = prevTotalScoreElement.style.paddingRight;
+                    }
+                    
+                    
+                    //var prevTotalScoreWidth  = parseInt(getComputedStyle(totalScoreElement)["width"]);
+                    //var pmetricPointsWidth = parseInt(getComputedStyle(metricPointsElement)["width"]);
+                    
+                    ///Store the padding values
+                    var prevLeftPaddingNum = parseFloat(totalScoreElement.style.paddingLeft);
+                    var prevRightPaddingNum = parseFloat(totalScoreElement.style.paddingRight);
+                    
+                    ///Reset the padding and get the width of the text for the current metric points and the current crawler score
+                    ////For metric points
+                    metricPointsElement.style.paddingLeft = "0px";
+                    metricPointsElement.style.paddingRight = "0px";
+                    metricPointsElement.innerHTML = metricPointsElement.innerHTML +  Math.abs(metricPointsValue).toString();
+                    ////For total score
+                    totalScoreElement.style.paddingLeft  = "0px";
+                    totalScoreElement.style.paddingRight = "0px";
+                    
+                    ///Get the widths for the score elements
+                    var totalScoreWidth  = totalScoreElement.getBoundingClientRect()["width"] - parseFloat(totalScoreElement.style.paddingLeft) -  parseFloat(totalScoreElement.style.paddingRight);
+                    var metricPointsWidth = metricPointsElement.getBoundingClientRect()["width"] - parseFloat(metricPointsElement.style.paddingLeft) -  parseFloat(metricPointsElement.style.paddingRight);
+                    ///Compute the difference in the string widths for the scores
+                    var widthDiff = Math.abs(totalScoreWidth - metricPointsWidth);
+                    
+                    ///Update the padding for the total score and metric score
+                    if(totalScoreWidth >= metricPointsWidth)//totalScore.toString().length >= (operatorStr + Math.abs(metricPointsValue).toString()).length)
+                    {
+                        ///Update total score element's padding
+                        totalScoreElement.style.paddingLeft = prevLeftPaddingNum.toString() + "px";
+                        totalScoreElement.style.paddingRight = prevRightPaddingNum.toString() + "px";
+                        
+                        ///Update metric score element's padding
+                        metricPointsElement.style.paddingLeft = (totalScoreTextElement.getBoundingClientRect()["width"] + prevLeftPaddingNum + widthDiff).toString() + "px"; //- parseFloat(totalScoreElement.style.paddingRight) - metricPointsElement.getBoundingClientRect()["width"]).toString() + "px";
+                        
+                        metricPointsElement.style.paddingRight = prevRightPaddingNum.toString() + "px";
+                    }
+                    else
+                    {
+                        if(index <= medianIndex)
+                        {///Left align the "Score:" text to the beginning of the crawler name
+                            metricPointsElement.style.paddingRight = (prevRightPaddingNum - widthDiff).toString() + "px";
+                        }
+                        else
+                        {///Right align the total score to the end of the crawler name
+                            prevTotalScoreElement.style.paddingRight = (parseFloat(prevTotalScoreElement.style.paddingRight) - widthDiff).toString() + "px";
+                            prevMetricScoreElement.style.paddingRight = (parseFloat(prevMetricScoreElement.style.paddingRight) - widthDiff).toString() + "px";
+                            if((prevRightPaddingNum - widthDiff) > 0)
+                                metricPointsElement.style.paddingRight = (prevRightPaddingNum - widthDiff).toString() + "px";
+                            else
+                                metricPointsElement.style.paddingRight = "0px";
+                            
+                        }
+                        //These padding values will be the same for both cases
+                        metricPointsElement.style.paddingLeft = (totalScoreTextElement.getBoundingClientRect()["width"] + spaceBetweenTextAndValue).toString() + "px";
+                        totalScoreElement.style.paddingLeft = (spaceBetweenTextAndValue + widthDiff).toString() + "px";
+                        totalScoreElement.style.paddingRight = metricPointsElement.style.paddingRight;
+                        
+                    }
+
+                    ///Update score animation
+                    await delay(scoreAnimationDelay * 1000);
+                    var previousWidth = totalScoreElement.getBoundingClientRect()["width"] - parseFloat(totalScoreElement.style.paddingLeft) - parseFloat(totalScoreElement.style.paddingRight);//parseFloat(getComputedStyle(totalScoreElement)["width"]);//Width with padding
+                    
+                    //Update the padding around the total score
+                    prevLeftPaddingNum = parseFloat(totalScoreElement.style.paddingLeft);
+                    prevRightPaddingNum = parseFloat(totalScoreElement.style.paddingRight);
+                    totalScoreElement.style.paddingLeft = spaceBetweenTextAndValue.toString() + "px";
+                    if(index <= medianIndex)
+                    {
+                        totalScoreElement.style.paddingRight = (parseFloat(totalScoreElement.style.paddingRight) + (prevLeftPaddingNum - spaceBetweenTextAndValue)).toString() + "px";//If left padding is adjusted, then update right padding
+                    }
+                    else
+                    {
+                        prevTotalScoreElement.style.paddingRight = (parseFloat(prevTotalScoreElement.style.paddingRight) + (prevLeftPaddingNum - spaceBetweenTextAndValue)).toString() + "px";//If left padding is adjusted, then update right padding
+                    }
+                    
+                    //Update total score value
+                    metricPointsElement.style.color = "white";//Make it fade into the background so that the padding is not affected for the other score
+                    totalScoreElement.innerHTML = (totalScore + metricPointsValue).toString();
+                    
+                    ///Update the padding based on the new score width
+                    ////Compute the difference between the previous total score width and the current width
+                    totalScoreWidth = totalScoreElement.getBoundingClientRect()["width"] - parseFloat(totalScoreElement.style.paddingLeft) - parseFloat(totalScoreElement.style.paddingRight);
+                    widthDiff = Math.abs(totalScoreWidth - previousWidth);
+                    console.log(totalScoreWidth, previousWidth);
+                    console.log(widthDiff.toString());
+                    if(index <= medianIndex && previousWidth < totalScoreWidth)
+                    {
+                        totalScoreElement.style.paddingRight = (parseFloat(totalScoreElement.style.paddingRight) - widthDiff).toString() + "px";
+                    }
+                    else if(index <= medianIndex && previousWidth > totalScoreWidth)
+                    {
+                        totalScoreElement.style.paddingRight = (parseFloat(totalScoreElement.style.paddingRight) + widthDiff).toString() + "px";
+                    }
+                    //*
+                    else if(index > medianIndex && previousWidth < totalScoreWidth)
+                    {
+                        prevTotalScoreElement.style.paddingRight = (parseFloat(prevTotalScoreElement.style.paddingRight) - widthDiff).toString() + "px";
+                    }
+                    else if(index > medianIndex && previousWidth > totalScoreWidth)
+                    {
+                        prevTotalScoreElement.style.paddingRight = (parseFloat(prevTotalScoreElement.style.paddingRight) + widthDiff).toString() + "px";
+                    }
+                    //*/ /*
+                    
+                    //Copy the values over from the total score to the metric score so that it aligns properly (the text for the metric scores should be the same as the background)
+                    metricPointsElement.innerHTML = totalScoreElement.innerHTML;
+                    metricPointsElement.style.paddingRight = totalScoreElement.style.paddingRight;
+                    metricPointsElement.style.paddingLeft = (totalScoreTextElement.getBoundingClientRect()["width"] + parseFloat(totalScoreElement.style.paddingLeft)).toString() + "px";
+                    if(index > 0)
+                    {
+                        prevMetricScoreElement.style.color = "white";//Make it fade into the background so that the padding is not affected for the other score
+                        prevMetricScoreElement.innerHTML = prevTotalScoreElement.innerHTML;
+                        prevMetricScoreElement.style.paddingRight = prevTotalScoreElement.style.paddingRight;
+                    }
+                    //*/
+                    
+                }
+            }
+            
+            function displayResult(resultsObj, scoringMetrics, scoringMetricIndex, scoreMultiplierList, viewedScoresList, scoreAnimationDelay=1.5, width=0, height=0)
             {
                 var defaultMetricValues = {"max_time_per_page": 5 * 60};
                 var defaultHeight = 40;
@@ -812,6 +1064,11 @@
                     barDiv.children[index].style.marginRight = spacingBetweenAxisValues.toString() + "px";
                 }
                 
+                if(!viewedScoresList.includes(scoringMetricIndex))
+                {
+                    updateScore(resultsObj, scoreObj, spaceBetweenTextAndValue=10, scoreAnimationDelay=scoreAnimationDelay);
+                    viewedScoresList.push(scoringMetricIndex);
+                }
             }
             
             function createDefaultScoreMultipliers(scoringMetrics)
@@ -854,11 +1111,15 @@
 			var resultsObj = getResultsObj();
             var scoringMetrics = getScoringMetrics();
             var scoreMultiplierList = createDefaultScoreMultipliers(scoringMetrics);
-			createButtons(resultsObj, scoringMetrics, scoreMultiplierList);
+			createButtons(resultsObj, scoringMetrics, scoreMultiplierList, [0]);//The [0] is associated with viewScoreList and it includes 0 because displayResult will be called immediately for the first metric
             displayTitleandCrawlerNames(resultsObj);
             //createTable(resultsObj);
-            
-            displayResult(resultsObj, scoringMetrics, 0, scoreMultiplierList);
+            viewedScoresList = [];
+            while(document.getElementById("total_scores") == null && document.getElementById("total_scores").children.length >= 2)
+            {
+                continue;
+            }
+            displayResult(resultsObj, scoringMetrics, 0, scoreMultiplierList, viewedScoresList, scoreAnimationDelay=4);
 			
 			
 		</script>
