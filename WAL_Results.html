@@ -267,12 +267,14 @@
 				downloadResultsButton.type = "button";
 				downloadResultsButton.className = "button darkButton";
 				downloadResultsButton.innerHTML = "Download Results";
+                downloadResultsButton.id = "download_results_btn";
 				createResultsFile(resultsObj, downloadResultsButton);
 				
 				var viewRoundButton = document.createElement("button");
 				viewRoundButton.type = "button";			
 				viewRoundButton.className = "button darkButton";
 				viewRoundButton.innerHTML = "Watch Round";
+                viewRoundButton.id = "view_round_btn";
 				if(resultsObj.hasOwnProperty("video"))
 					viewRoundButton.onclick = function(){window.open(resultsObj["video"], "_blank")};
 				
@@ -289,6 +291,7 @@
                 prevResultButton.type = "button";
                 prevResultButton.className = "button darkButton";
                 prevResultButton.innerHTML = "Previous Metric";
+                prevResultButton.id = "prev_metric_btn";
                 if(scoringMetrics != null && scoringMetrics.length > 1)
                 {
                     prevResultButton.onclick = function(){
@@ -312,6 +315,7 @@
                 nextResultButton.type = "button";
                 nextResultButton.className = "button darkButton";
                 nextResultButton.innerHTML = "Next Metric";
+                nextResultButton.id = "next_metric_btn";
                 if(scoringMetrics != null && scoringMetrics.length > 1)
                 {
                     nextResultButton.onclick = function(){
@@ -413,11 +417,12 @@
                     </h1>
                     <div id="qrcode" style="text-align: center; margin: auto;"><canvas width="256" height="192" style="display: none;"></canvas><img title="https://treid003.github.io/WAL_Results.html?d=eyJ2IjoiMS4wIiwiZGF0ZSI6IjIwMjItMDctMjciLCJ2aWRlbyI6Imh0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9TTVqTDd1SFFDZncmdD0yMnMiLCJkYXRhIjpbWyJCcm96emxlciIsMTAsIjA6MDc6MTAuMjIxODI3IiwzLDIsMCwwLDAsMCwwLDQsMV0sWyJCcm93c2VydHJpeCIsMTAsIjA6MDQ6MzcuMDMxNTIwIiwyLDAsMCwwLDAsMCwwLDAsMF1dfQ==&amp;s=2,5-10"
                  */
-                ///Currently here
                 var qrCodeDivChildIndex = 2;
                 var scoreClass = "score";
                 var spaceBetweenTextAndValue = 10;
                 var scoreDiv = document.createElement("div");
+                //Add an attribute to that will be used to determine when the scores are finished updating
+                scoreDiv.setAttribute("data-updating", 1);
                 document.body.insertBefore(scoreDiv, qrCodeDiv);
                 qrCodeDivChildIndex += 1;
                 scoreDiv.style.width = parentDiv.style.width;
@@ -427,6 +432,7 @@
                 document.body.insertBefore(newPointsDiv, qrCodeDiv);
                 qrCodeDivChildIndex += 1;
                 
+
                 
                 totalSpaceUsed = 0;
                 
@@ -457,6 +463,8 @@
                 var padding = Math.floor((parseInt(scoreDiv.style.width) - totalSpaceUsed - spaceBetweenTextAndValue*numCrawlers) / (numCrawlers - 1));
                 scoreOneValue.style.paddingRight = padding.toString() + "px";
                 
+                //Finished updating initial scores
+                scoreDiv.setAttribute("data-updating", 0);
             }
             
             function createTable(resultsObj)
@@ -671,6 +679,17 @@
                                     4.2.2.1 If the total is on the left side of the median, then reduce the right padding for the total and the metric points (this results in left alignment of the test)
                                     4.2.2.2 If the total is on the right side of the median, then reduce the right padding for the previous total and metric points so that the numbers for the current points are right aligned
                  */
+                //Wait until the scores are finished being updated by a different function call
+                scoreDiv = document.getElementById("total_scores");
+                while(parseInt(scoreDiv.getAttribute("data-updating")) == 1)
+                {
+                    await delay(1000);
+                }
+                
+                //Start to update the scores
+                scoreDiv = document.getElementById("total_scores");
+                scoreDiv.setAttribute("data-updating", 1);
+                
                 var numCrawlers = resultsObj["data"].length;
                 var medianIndex = Math.ceil(numCrawlers / 2) - 1;
                 for(let index = 0; index < numCrawlers; index++)
@@ -831,6 +850,7 @@
                     //*/
                     
                 }
+                scoreDiv.setAttribute("data-updating", 0);
             }
             
             function displayResult(resultsObj, scoringMetrics, scoringMetricIndex, scoreMultiplierList, viewedScoresList, scoreAnimationDelay=1.5, width=0, height=0)
