@@ -75,29 +75,35 @@
             {
                 var name = crawlerName.toLowerCase();
                 var knownCrawlersList = ["brozzler", "browsertrix", "wget", "wayback machine", "archive.today", "arquivo.pt"];
-                var colorList = ["lightred", "cyan", "orange", "green", "purple", "pink", "yellow"];
+                var colorList = ["blue", "lightred", "cyan", "orange", "green", "purple", "pink", "yellow"];
                 if(name == "brozzler")
                 {
-                    return "#6d9eebff";
+                    return "#6d9eeb";
                 }
                 else if(name == "browsertrix")
                 {
-                    return "#595959ff";
+                    return "#595959";
+                }
+                else if(name == "wget")
+                {
+                    return "#00ff00";
                 }
                 else
                 {
-                    var currentColor = "blue";
-                    if(otherCrawlersList != null)
+                    if(crawlersList != null)
                     {
-                        var unknownCounter = 0;
                         var currentCrawlerIndex = -1;
                         for(let index = 0; index < crawlersList.length; index++)
                         {
                             if(name == currentName)
                                 currentCrawlerIndex = index;
                         }
-                        
-                        return colorList[currentCrawlerIndex];
+                        var colorIndex = currentCrawlerIndex % colorList.length;
+                        return colorList[colorIndex];
+                    }
+                    else
+                    {
+                        return colorList[0];
                     }
                 }
                 
@@ -925,15 +931,23 @@
                 
                 totalSpaceUsed = 0;
                 //Add crawlers' names
+                /// Get list of crawler names
+                crawlerNameList = []
+                for(let index = 0; index < numCrawlers; index++)
+                {
+                    var crawlerName = resultsObj["data"][index][0];
+                    crawlerNameList.push(crawlerName);
+                }
+                
                 var resultHeadingClass = "resultHeading";
                 var numCrawlers = resultsObj["data"].length;
                 for(let index = 0; index < numCrawlers; index++)
                 {
                     var currentCrawlerNameDiv = document.createElement("h1");
-                    var crawlerName = resultsObj["data"][index][0];
+                    var crawlerName = crawlerNameList[index];
                     currentCrawlerNameDiv.innerHTML = crawlerName;
                     currentCrawlerNameDiv.className = resultHeadingClass;
-                    currentCrawlerNameDiv.style.color = getKnownCrawlerColor(crawlerName);
+                    currentCrawlerNameDiv.style.color = getKnownCrawlerColor(crawlerName, crawlerNameList);
                     resultHeadingDiv.appendChild(currentCrawlerNameDiv);
                     
                     totalSpaceUsed += currentCrawlerNameDiv.getBoundingClientRect()["width"];
