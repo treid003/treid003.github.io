@@ -932,6 +932,7 @@
                 totalSpaceUsed = 0;
                 //Add crawlers' names
                 /// Get list of crawler names
+                var numCrawlers = resultsObj["data"].length;
                 crawlerNameList = []
                 for(let index = 0; index < numCrawlers; index++)
                 {
@@ -940,7 +941,6 @@
                 }
                 
                 var resultHeadingClass = "resultHeading";
-                var numCrawlers = resultsObj["data"].length;
                 for(let index = 0; index < numCrawlers; index++)
                 {
                     var currentCrawlerNameDiv = document.createElement("h1");
