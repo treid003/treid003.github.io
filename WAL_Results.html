@@ -93,11 +93,7 @@
                     if(crawlersList != null)
                     {
                         var currentCrawlerIndex = -1;
-                        for(let index = 0; index < crawlersList.length; index++)
-                        {
-                            if(name == currentName)
-                                currentCrawlerIndex = index;
-                        }
+                        currentCrawlerIndex = crawlersList.indexOf(name);
                         var colorIndex = currentCrawlerIndex % colorList.length;
                         return colorList[colorIndex];
                     }
