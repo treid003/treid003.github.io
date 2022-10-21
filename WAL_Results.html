@@ -604,11 +604,11 @@
                         if(maxMetricVal == -1)
                         {
                             var numPages = resultsObj["data"][0][1];
-                            currentCrawler["metric_score"] = Math.abs(scoreObj["fixed_max_metric_value"] - currentCrawler["metric_value"]) * scoreMultiplier;
+                            currentCrawler["metric_score"] = scoreObj["fixed_max_metric_value"] - currentCrawler["metric_value"] * scoreMultiplier;
                         }
                         else
                         {
-                            currentCrawler["metric_score"] = Math.abs(maxMetricVal - currentCrawler["metric_value"]) * scoreMultiplier;
+                            currentCrawler["metric_score"] = maxMetricVal - currentCrawler["metric_value"] * scoreMultiplier;
                         }
                         
                         if(currentCrawler["metric_value"] > scoreObj["metric_upper_limit"])
