@@ -562,7 +562,7 @@
                 {
                     metricName = colHeaders[performanceMetricIndex];
                 }
-                scoreObj["metric_name"] = metricName;
+                scoreObj["metric_name"] = metricName.split("(")[0].trim();
                 
                 
                 scoreObj["crawler_list"] = [];
@@ -980,7 +980,7 @@
                 
                 //Add metric name
                 var metricTitle = document.createElement("h1");
-                metricTitle.innerHTML = scoreObj["metric_name"].split("(")[0].trim();
+                metricTitle.innerHTML = scoreObj["metric_name"];
                 metricTitle.className = resultHeadingClass;
                 var metricTitleIndex = Math.ceil(resultHeadingDiv.children.length / 2);
                 resultHeadingDiv.insertBefore(metricTitle, resultHeadingDiv.children[metricTitleIndex]);
