@@ -201,6 +201,10 @@
                     //More cols may be added if there are other MIME types detected. Need to make the column headings fixed for all MIME types for the next version.
                     colHeaders = ["Crawler Name", "Number of URLs Archived", "Completion Times", "Number of 404s", "Number of Other Client or Server Error Responses", "Number of Missing CSS Files", "Number of Missing JavaScript Files", "Number of Missing Image Files", "Number of Missing Video Files", "Number of Missing Audio Files", "Number of Missing text/html Files", "Number of Missing warc/revisit Files"];
                 }
+                else if(resultsObj["v"] == "1.1")
+                {
+                    colHeaders = ["Crawler Name", "Number of Seed URIs", "Completion Time", "Number of 404s (determined by using CDXJ file)", "Archived HTML Files (determined by using CDXJ file)", "Missing HTML Files (determined by using CDXJ file)", "Archived Image Files (determined by using CDXJ file)", "Missing Image Files (determined by using CDXJ file)", "Archived Video Files (determined by using CDXJ file)", "Missing Video Files (determined by using CDXJ file)", "Archived Audio Files (determined by using CDXJ file)", "Missing Audio Files (determined by using CDXJ file)", "Archived CSS Files (determined by using CDXJ file)", "Missing CSS Files (determined by using CDXJ file)", "Archived JavaScript Files (determined by using CDXJ file)", "Missing JavaScript Files (determined by using CDXJ file)", "Archived JSON Files (determined by using CDXJ file)", "Missing JSON Files (determined by using CDXJ file)", "Archived XML Files (determined by using CDXJ file)", "Missing XML Files (determined by using CDXJ file)", "Archived PDF Files (determined by using CDXJ file)", "Missing PDF Files (determined by using CDXJ file)", "Archived Font Files (determined by using CDXJ file)", "Missing Font Files (determined by using CDXJ file)", "Other Archived Files (determined by using CDXJ file)", "Other Missing Files (determined by using CDXJ file)"];
+                }
                 
                 return colHeaders;
             }
@@ -550,7 +554,7 @@
                 {
                     metricName = "Number of 4XX or 5XX HTTP Status Codes";
                 }
-                else if(headingLowerCase.includes("files"))
+                else if(headingLowerCase.includes("files") && headingLowerCase.includes("Number of"))
                 {
                     metricName = colHeaders[performanceMetricIndex].replace("Number of ", "");
                 }
@@ -641,6 +645,31 @@
                         
                         ///Compute the score for the metric
                         currentCrawler["metric_score"] = currentCrawler["metric_value"] * scoreMultiplier * -1;
+                        
+                        if(currentCrawler["metric_value"] > scoreObj["metric_upper_limit"])
+                        {
+                            scoreObj["metric_upper_limit"] = currentCrawler["metric_value"];
+                        }
+                        
+                        //Add the crawler's score object to scoreObj
+                        scoreObj["crawler_list"].push(currentCrawler);
+                    }
+                    
+                    //Get the upper limit for the score
+                    scoreObj["metric_upper_limit"] = getMetricUpperLimit(scoreObj["metric_upper_limit"]);
+                }
+                else if(headingLowerCase.includes("archived"))
+                {
+                    scoreObj["prefer_high_metric_value"] = true;
+                    for(let crawlerIndex = 0; crawlerIndex < resultsObj["data"].length; crawlerIndex++)
+                    {
+                        var currentCrawler = {};
+                        var crawlerName = resultsObj["data"][crawlerIndex][0];
+                        currentCrawler["crawler_name"] = crawlerName;
+                        currentCrawler["metric_value"] = resultsObj["data"][crawlerIndex][performanceMetricIndex];
+                        
+                        ///Compute the score for the metric
+                        currentCrawler["metric_score"] = currentCrawler["metric_value"] * scoreMultiplier;
                         
                         if(currentCrawler["metric_value"] > scoreObj["metric_upper_limit"])
                         {
@@ -1101,7 +1130,7 @@
                 }
             }
             
-            function createDefaultScoreMultipliers(scoringMetrics)
+            function createDefaultScoreMultipliers(scoringMetrics, version)
             {
                 scoreMultiplierList = [];
                 for(let scoringMetricIndex = 0; scoringMetricIndex < scoringMetrics.length; scoringMetricIndex++)
@@ -1111,25 +1140,51 @@
                     {
                         scoreMultiplierList.push(1);
                     }
-                    else if(performanceMetricIndex == 4 || performanceMetricIndex == 7)
+                    else if(version == "1.0")
                     {
-                        scoreMultiplierList.push(50);
+                        if(performanceMetricIndex == 4 || performanceMetricIndex == 7)
+                        {
+                            scoreMultiplierList.push(50);
+                        }
+                        else if(performanceMetricIndex == 3 || performanceMetricIndex == 8 || performanceMetricIndex == 9 || performanceMetricIndex == 11)
+                        {
+                            scoreMultiplierList.push(100);
+                        }
+                        else if(performanceMetricIndex == 5)
+                        {
+                            scoreMultiplierList.push(200);
+                        }
+                        else if(performanceMetricIndex == 6)
+                        {
+                            scoreMultiplierList.push(300);
+                        }
+                        else if(performanceMetricIndex == 10)
+                        {
+                            scoreMultiplierList.push(500);
+                        }
                     }
-                    else if(performanceMetricIndex == 3 || performanceMetricIndex == 8 || performanceMetricIndex == 9 || performanceMetricIndex == 11)
+                    else if(version == "1.1")
                     {
-                        scoreMultiplierList.push(100);
-                    }
-                    else if(performanceMetricIndex == 5)
-                    {
-                        scoreMultiplierList.push(200);
-                    }
-                    else if(performanceMetricIndex == 6)
-                    {
-                        scoreMultiplierList.push(300);
-                    }
-                    else if(performanceMetricIndex == 10)
-                    {
-                        scoreMultiplierList.push(500);
+                        if(performanceMetricIndex == 6 || performanceMetricIndex == 7 || performanceMetricIndex == 22 || performanceMetricIndex == 23 || performanceMetricIndex == 24 || performanceMetricIndex == 25)
+                        {
+                            scoreMultiplierList.push(50);
+                        }
+                        else if(performanceMetricIndex == 3 || performanceMetricIndex == 8 || performanceMetricIndex == 9 || performanceMetricIndex == 10 || performanceMetricIndex == 11 || performanceMetricIndex == 16 || performanceMetricIndex == 17 || performanceMetricIndex == 18 || performanceMetricIndex == 19 || performanceMetricIndex == 20 || performanceMetricIndex == 21)
+                        {
+                            scoreMultiplierList.push(100);
+                        }
+                        else if(performanceMetricIndex == 12 || performanceMetricIndex == 13)
+                        {
+                            scoreMultiplierList.push(200);
+                        }
+                        else if(performanceMetricIndex == 14 || performanceMetricIndex == 15)
+                        {
+                            scoreMultiplierList.push(300);
+                        }
+                        else if(performanceMetricIndex == 4 || performanceMetricIndex == 5)
+                        {
+                            scoreMultiplierList.push(500);
+                        }
                     }
                 }
                 
@@ -1140,7 +1195,7 @@
 			createQRCode();
 			var resultsObj = getResultsObj();
             var scoringMetrics = getScoringMetrics();
-            var scoreMultiplierList = createDefaultScoreMultipliers(scoringMetrics);
+            var scoreMultiplierList = createDefaultScoreMultipliers(scoringMetrics, resultsObj["v"]);
 			createButtons(resultsObj, scoringMetrics, scoreMultiplierList, [0]);//The [0] is associated with viewScoreList and it includes 0 because displayResult will be called immediately for the first metric
             displayTitleandCrawlerNames(resultsObj);
             //createTable(resultsObj);
