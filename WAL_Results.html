@@ -584,10 +584,14 @@
                         //Original metric without the fraction of a second
                         var speedrunTimeStr = resultsObj["data"][crawlerIndex][performanceMetricIndex].split(".")[0];
                         
-                        //Reformat string if the word "days" is in the time
+                        //Reformat string if the word "day" or "days" is in the time
                         if(speedrunTimeStr.includes("days"))
                         {
                             speedrunTimeStr = speedrunTimeStr.split("days,")[0].trim() + ":" + speedrunTimeStr.split("days,")[1].trim()
+                        }
+                        else if(speedrunTimeStr.includes("day,"))
+                        {
+                            speedrunTimeStr = speedrunTimeStr.split("day,")[0].trim() + ":" + speedrunTimeStr.split("day,")[1].trim()
                         }
                         
                         //Alternative metric value for the time that was will be converted to seconds
