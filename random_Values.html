@@ -34,7 +34,7 @@
             document.getElementById("math.random").innerHTML = Math.random();
 
             ///crypto.getRandomValues()
-            a = new Uint8Array(1), window.crypto.getRandomValues(a);
+            a = new Uint8Array(1), globalThis.crypto.getRandomValues(a);
             document.getElementById("crypto.getRandomValues").innerHTML = a[0];
             
             // Generate safeframe URL 
@@ -58,7 +58,7 @@
             ///crypto.getRandomValues()
             ////Create the random number array (code from Th())
             var a;
-            a = new Uint8Array(16), window.crypto.getRandomValues(a);
+            a = new Uint8Array(16), globalThis.crypto.getRandomValues(a);
             ////Convert the array to a hexadecimal string (similar to what is done in Uh())
             randomValue = "";
             for(b=0; b < a.length; b++)
