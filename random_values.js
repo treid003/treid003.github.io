@@ -26,7 +26,7 @@ document.getElementById("math.random_Safeframe").innerHTML = safeframeURL;
 ///Create a safeframe 
 var tempFrame = document.createElement("IFRAME");
 tempFrame.src = safeframeURL;
-document.body.insertBefore(tempFrame, document.getElementById("crypto.getRandomValues_Safeframe"));
+document.body.insertBefore(tempFrame, document.getElementById("after_math.random"));
 
 ///crypto.getRandomValues()
 ////Create the random number array (code from Th())
@@ -40,6 +40,7 @@ safeframeURL = "https://" + randomValue + ".safeframe.googlesyndication.com" + "
 document.getElementById("crypto.getRandomValues_Safeframe").href = safeframeURL;
 document.getElementById("crypto.getRandomValues_Safeframe").innerHTML = safeframeURL;
 ///Create a safeframe 
+document.body.appendChild(document.createElement("br"))
 var tempFrame = document.createElement("IFRAME");
 tempFrame.src = safeframeURL;
 document.body.appendChild(tempFrame);
