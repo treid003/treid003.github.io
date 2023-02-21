@@ -24,9 +24,9 @@ safeframeURL = "https://" + randomValue + ".safeframe.googlesyndication.com" + "
 document.getElementById("math.random_Safeframe").href = safeframeURL;
 document.getElementById("math.random_Safeframe").innerHTML = safeframeURL;
 ///Create a safeframe 
-document.body.appendChild(document.createElement("br"));
 var tempFrame = document.createElement("IFRAME");
 tempFrame.src = safeframeURL;
+document.body.insertBefore(document.createElement("br"), document.getElementById("after_math.random"));
 document.body.insertBefore(tempFrame, document.getElementById("after_math.random"));
 
 ///crypto.getRandomValues()
