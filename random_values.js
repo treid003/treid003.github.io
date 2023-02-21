@@ -23,6 +23,10 @@ for(b=0; b < a.length; b++)
 safeframeURL = "https://" + randomValue + ".safeframe.googlesyndication.com" + "/safeframe/1-0-40/html/container.html?n=1";
 document.getElementById("math.random_Safeframe").href = safeframeURL;
 document.getElementById("math.random_Safeframe").innerHTML = safeframeURL;
+///Create a safeframe 
+var tempFrame = document.createElement("IFRAME");
+tempFrame.src = safeframeURL;
+document.body.insertBefore(tempFrame, document.getElementById("crypto.getRandomValues_Safeframe"));
 
 ///crypto.getRandomValues()
 ////Create the random number array (code from Th())
@@ -35,3 +39,7 @@ for(b=0; b < a.length; b++)
 safeframeURL = "https://" + randomValue + ".safeframe.googlesyndication.com" + "/safeframe/1-0-40/html/container.html?n=1";
 document.getElementById("crypto.getRandomValues_Safeframe").href = safeframeURL;
 document.getElementById("crypto.getRandomValues_Safeframe").innerHTML = safeframeURL;
+///Create a safeframe 
+var tempFrame = document.createElement("IFRAME");
+tempFrame.src = safeframeURL;
+document.body.appendChild(tempFrame);
