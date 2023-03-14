@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <title>Random Values</title>
+		<style>
+		</style>
+	</head>
+	<body>
+		<!-- <div style="width: 200px; height:300px;"></div> -->
+        <h1>Image Ad</h1>
+        <h2>Inside img Element</h2>
+        <img src="https://s0.2mdn.net/sadbundle/8490828192515488243/resolve_bg.jpg" width="1080px" height="auto"></img>
+        
+        <br><br>
+        <h2>Inside iframe Element</h2>
+        <iframe src="https://s0.2mdn.net/sadbundle/8490828192515488243/resolve_bg.jpg" width="1080px" height="280px"></iframe>
+
+        <br><br>
+
+        <h1>Video Ad</h1>
+        <h2>Inside video Element</h2>
+        <video controls src="https://s-static.innovid.com/media/encoded/01_23/604273/8_source_163708_811440.mp4" width="720px" height="auto"></video>
+        
+        <br><br>
+        <h2>Inside iframe</h2>
+        <iframe src="https://s-static.innovid.com/media/encoded/01_23/604273/8_source_163708_811440.mp4" width="720px" height="400px"></iframe>
+
+        <br><br>
+
+        <h1>Embedded Webpage Ad</h1>
+        <iframe src="https://cdn.flashtalking.com/104731/3946829/index.html" width="325px" height="625px"></iframe>
+
+        <script>
+            function resizeIframes(e){
+                var iframes = document.querySelectorAll("iframe");
+                for(var i = 0; i < iframes.length; i++)
+                {
+                    currentIframe = iframes[i];
+                    currentIframe.width = currentIframe.contentWindow.document.body.scrollWidth;
+                    currentIframe.height = currentIframe.contentWindow.document.body.scrollHeight;
+                    
+                }
+            }
+
+            //window.addEventListener('DOMContentLoaded', resizeIframes);
+
+        </script>
+	</body>
+</html>
