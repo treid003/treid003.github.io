@@ -31,9 +31,24 @@ function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6
         googletag.pubads().addEventListener("slotOnload", (event) => {
             if(event.slot === targetSlot)
             {
-                var willLoadWebpage = true
+                //Check to see if the safeframe loaded with a duration more than 0
+                /// The safeframe URL shoud be different each time the web page is loaded so the duration should be more than 0
+                var willLoadWebpage = false;
+                var re = performance.getEntriesByType("resource");
+                var safeframeURL = adDiv.children[0].children[0].src;
+                for(var i = 0; i < re.length; i++)
+                {
+                    var entry = re[i];
+                    console.log("Duration: " + entry.duration + " | Name: " + entry.name);
+                    if(entry.name === safeframeURL && entry.duration > 0)
+                    {
+                        willLoadWebpage = true;
+                        break;
+                    }   
+                }
+                
                 //Check the status code of the safeframe
-                if (checkStatus === true)
+                if (checkStatus === true && willLoadWebpage === true)
                 {
                     var safeframeURL = adDiv.children[0].children[0].src;
                     var statusCode = 404;
