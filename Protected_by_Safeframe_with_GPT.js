@@ -19,7 +19,8 @@ function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6
     adDiv.id = "example-ad";
     adDiv.setAttribute("style", "width: 728px; height: 90px;");
     document.body.appendChild(adDiv);
-    //document.getElementsByTagName("head")[0].appendChild(adDiv);
+    setupObserver(srcForIframe, srcType, adDiv, checkStatus, serverSideScriptPath);
+
     googletag.cmd.push(function() {
         googletag.pubads().setForceSafeFrame(true);
         const targetSlot = googletag
@@ -30,62 +31,8 @@ function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6
         //*          
         googletag.pubads().addEventListener("slotOnload", (event) => {
             if(event.slot === targetSlot)
-            {
-                //Check to see if the safeframe loaded with a duration more than 0
-                /// The safeframe URL shoud be different each time the web page is loaded so the duration should be more than 0
-                var willLoadWebpage = false;
-                var re = performance.getEntriesByType("resource");
-                var safeframeURL = adDiv.children[0].children[0].src;
-                for(var i = 0; i < re.length; i++)
-                {
-                    var entry = re[i];
-                    console.log("Duration: " + entry.duration + " | Name: " + entry.name);
-                    if(entry.name === safeframeURL && entry.duration > 0)
-                    {
-                        willLoadWebpage = true;
-                        break;
-                    }   
-                }
-                
-                //Check the status code of the safeframe
-                if (checkStatus === true && willLoadWebpage === true)
-                {
-                    var safeframeURL = adDiv.children[0].children[0].src;
-                    var statusCode = 404;
-                    var xhr = new XMLHttpRequest();
-                    xhr.open("POST", serverSideScriptPath);
-                    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    xhr.send("safeframeURL=" + safeframeURL);
-                    xhr.onload = function() {
-                        if(xhr.status == 200)
-                        {
-                            statusCode = xhr.responseText;
-                            if (statusCode < 400)
-                            {
-                                console.log("successfully loaded example ad");
-                                console.log("Status code: "+ statusCode + " | URL: " +  safeframeURL);
-                                willLoadWebpage = true;
-                            }
-                            else
-                            {
-                                console.log("failed to load example ad");
-                                willLoadWebpage = false;
-                            }
-                        }
-                        else
-                        {
-                            console.log("failed to load example ad");
-                            willLoadWebpage = false;
-                        }
-                    }
-                }
-                
-                if(willLoadWebpage)
-                {
-                    hideAdDiv(adDiv);
-                    loadWebPage(srcForIframe, srcType);
-                }
-                //return willLoadWebpage;
+            {   
+                adDiv.setAttribute("safeframeLoaded", "true");
             }
         });
         //*/
@@ -93,7 +40,7 @@ function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6
         
         setTimeout(() => {
             googletag.pubads().refresh();
-        }, 1000);
+        }, 10);
     });
     var adDivScript = document.createElement("script");
     adDiv.appendChild(adDivScript);
@@ -122,4 +69,101 @@ function loadWebPage(srcForIframe, srcType="srcdoc")
     webPageFrame.style.height = "100%";
     webPageFrame.style.border = "none";
     webPageFrame.style.overflow = "hidden";
+}
+
+
+/*
+    Code from the previous slotOnload function will be moved to this function so that an ad removal error will not occur.
+
+    It was occurring previously, because the resources loaded during an onLoad function for the ad is considered network traffic from the ad. This can result in too much traffic and the ad will be removed.
+*/
+function checkSafeframe(adDiv)
+{
+    //Check to see if the safeframe loaded with a duration more than 0
+    /// The safeframe URL shoud be different each time the web page is loaded so the duration should be more than 0
+    var willLoadWebpage = false;
+    var re = performance.getEntriesByType("resource");
+    var safeframeURL = adDiv.children[0].children[0].src;
+    for(var i = 0; i < re.length; i++)
+    {
+        var entry = re[i];
+        console.log("Duration: " + entry.duration + " | Name: " + entry.name);
+        if(entry.name === safeframeURL && entry.duration > 0)
+        {
+            willLoadWebpage = true;
+            break;
+        }   
+    }
+    
+    //Check the status code of the safeframe
+    var checkStatus = adDiv.getAttribute("checkStatus");
+    var serverSideScriptPath = adDiv.getAttribute("serverSideScriptPath");
+    if (checkStatus === "true" && willLoadWebpage === true)
+    {
+        var statusCode = 404;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", serverSideScriptPath);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.send("safeframeURL=" + safeframeURL);
+        xhr.onload = function() {
+            if(xhr.status == 200)
+            {
+                statusCode = xhr.responseText;
+                if (statusCode < 400)
+                {
+                    console.log("successfully loaded example ad");
+                    console.log("Status code: "+ statusCode + " | URL: " +  safeframeURL);
+                    willLoadWebpage = true;
+                }
+                else
+                {
+                    console.log("failed to load example ad");
+                    willLoadWebpage = false;
+                }
+            }
+            else
+            {
+                console.log("failed to load example ad");
+                willLoadWebpage = false;
+            }
+        }
+    }
+    
+    if(willLoadWebpage)
+    {
+        var srcForIframe = atob(adDiv.getAttribute("srcForIframe"));
+        var srcType = adDiv.getAttribute("srcType");
+
+        hideAdDiv(adDiv);
+        loadWebPage(srcForIframe, srcType);
+    }
+}
+
+//This function will be called after the safeframeLoaded attribute has been set
+function waitForSafeframe(mutations)
+{
+    ///Check if the attribute associated with the ad's slotOnload function has been set to true
+    var attributeName = "safeframeLoaded";
+    attributeName = attributeName.toLowerCase();
+    for(var mutationIndex = 0; mutationIndex < mutations.length; mutationIndex++)
+    {
+        var currentMutation = mutations[mutationIndex];
+        if(currentMutation.type === "attributes" && currentMutation.attributeName.toLowerCase() === attributeName && currentMutation.target.getAttribute(attributeName) === "true") 
+        {
+            checkSafeframe(currentMutation.target);
+            break;
+        }
+    }
+}
+
+//Function used to start the observer that will check if the safeframe has loaded
+function setupObserver(srcForIframe, srcType, adDiv, checkStatus, serverSideScriptPath)
+{
+    adDiv.setAttribute("checkStatus", checkStatus);
+    adDiv.setAttribute("serverSideScriptPath", serverSideScriptPath);
+    adDiv.setAttribute("srcForIframe", btoa(srcForIframe));
+    adDiv.setAttribute("srcType", srcType);
+    var observer = new MutationObserver(waitForSafeframe);
+    var options = {attributes: true, attributeOldValue: true};
+    observer.observe(adDiv, options);
 }
