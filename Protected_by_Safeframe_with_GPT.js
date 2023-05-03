@@ -40,7 +40,7 @@ function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6
         
         setTimeout(() => {
             googletag.pubads().refresh();
-        }, 10);
+        }, 1000);
     });
     var adDivScript = document.createElement("script");
     adDiv.appendChild(adDivScript);
@@ -69,13 +69,19 @@ function loadWebPage(srcForIframe, srcType="srcdoc")
     webPageFrame.style.height = "100%";
     webPageFrame.style.border = "none";
     webPageFrame.style.overflow = "hidden";
+    
+    var clonedFrame = webPageFrame.cloneNode(true);
+    setTimeout(() => {
+        document.body.appendChild(clonedFrame);
+        webPageFrame.remove();
+    }, 5000);
 }
 
 
 /*
-    Code from the previous slotOnload function will be moved to this function so that an ad removal error will not occur.
-
-    It was occurring previously, because the resources loaded during an onLoad function for the ad is considered network traffic from the ad. This can result in too much traffic and the ad will be removed.
+    This was initially created to avoid the ad removal error that was ocurring for iframes that did not contain ads, but it did not fix the issue.
+ 
+    I had to clone the iframe that contained the final web page content and then load the content after the expected time for the original frame to be removed by the browser.
 */
 function checkSafeframe(adDiv)
 {
