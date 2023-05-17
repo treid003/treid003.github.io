@@ -1,0 +1,15 @@
+<AllAds>
+    <Ad>
+        <Name>Ad One</Name>
+        <Description>Description for ad 1.</Description>
+    </Ad>
+    <Ad>
+        <Name>Ad Two</Name>
+        <Description>Description for ad 2.</Description>
+    </Ad>
+    <Ad>
+        <Name>Ad Three</Name>
+        <Description>Description for ad 3.</Description>
+    </Ad>
+</AllAds>
+
