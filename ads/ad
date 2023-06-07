@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Block Ads By Regular Expression</title>
+    <link rel="stylesheet" type="text/css" href="https://treid003.github.io/formatAds.css">
+  </head>
+  <body>
+
+    <script src="https://treid003.github.io/displayAds.js"> </script>
+    <script> displayMessage(); </script>
+  </body>
+</html>
