@@ -1,4 +1,6 @@
-function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6355419/Travel/Europe", serverSideScriptPath="getStatusCode.php")
+//Travis Reid
+
+function protectWebpage(srcForIframe, srcType, adUnitPath="/6355419/Travel/Europe", checkStatus=false, serverSideScriptPath="getStatusCode.php")
 {
     //Check if Google Publisher Tag file has been loaded
     //*
@@ -28,6 +30,7 @@ function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6
             adUnitPath, [728, 90], adDiv.id)
         .addService(googletag.pubads());
         googletag.pubads().disableInitialLoad();
+        
         //*          
         googletag.pubads().addEventListener("slotOnload", (event) => {
             if(event.slot === targetSlot)
@@ -36,6 +39,7 @@ function protectWebpage(srcForIframe, srcType, checkStatus=false, adUnitPath="/6
             }
         });
         //*/
+        
         googletag.enableServices();
         
         setTimeout(() => {
