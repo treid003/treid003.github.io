@@ -2,6 +2,10 @@
 
 function protectWebpage(srcForIframe, srcType, adUnitPath="/6355419/Travel/Europe", checkStatus=false, serverSideScriptPath="getStatusCode.php")
 {
+    //Remove the script element that called this function
+    var allScripts = document.querySelectorAll("script");
+    allScripts.forEach((x, i) => (x.innerHTML.toLowerCase().includes("protectwebpage(")) ? x.remove():console.log(""));
+    
     //Check if Google Publisher Tag file has been loaded
     //*
     var gptURL = "https://securepubads.g.doubleclick.net/tag/js/gpt.js";
