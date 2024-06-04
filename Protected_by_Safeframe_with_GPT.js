@@ -1,3 +1,4 @@
+//Protected by Safeframe with GPT
 //Travis Reid
 
 function protectWebpage(srcForIframe, srcType, adUnitPath="/6355419/Travel/Europe", checkStatus=false, serverSideScriptPath="getStatusCode.php")
