@@ -153,7 +153,7 @@ function onVisibilityChange(el, callback) {
     }
 }
 
-var handler = onVisibilityChange(el, function() {
+var handler = onVisibilityChange(currentTimeText, function() {
     var stopTime = new Date;
     var duration = (startTime.getTime() - stopTime.getTime); //The time is in ms
 
