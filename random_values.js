@@ -151,7 +151,7 @@ function isVisibile(el, callback) {
     }
 }
 
-var handler = onVisibilityChange(currentTimeText, function() {
+var handler = isVisibile(currentTimeText, function() {
     if(parseInt(cryptoRandomTextForScrollingExample.innerHTML) > 0)
         return;
     
