@@ -85,7 +85,6 @@ document.body.appendChild(mathRandomTextForScrollingExample);
 
 //<h3 style="display: inline-block;">crypto.getRandomValues():</h3>
 document.body.appendChild(document.createElement("br"));
-document.body.appendChild(document.createElement("br"));
 currentHeading = document.createElement("h4");
 currentHeading.innerHTML = "crypto.getRandomValues():";
 currentHeading.style.display = "inline-block";
@@ -108,6 +107,7 @@ var mathRandomLinkForScrollingExample = document.createElement("a");
 mathRandomLinkForScrollingExample.style.display = "inline-block";
 document.body.appendChild(mathRandomLinkForScrollingExample);
 //<iframe src="https://d63db3ade6b55448a66f865cea5f6779.safeframe.googlesyndication.com/safeframe/1-0-40/html/container.html?n=1"></iframe>
+document.body.appendChild(document.createElement("br"));
 var mathRandomIframeForScrollingExample = document.createElement("iframe");
 document.body.appendChild(mathRandomIframeForScrollingExample);
 
@@ -123,6 +123,7 @@ var cryptoRandomLinkForScrollingExample = document.createElement("a");
 cryptoRandomLinkForScrollingExample.style.display = "inline-block";
 document.body.appendChild(cryptoRandomLinkForScrollingExample);
 //<iframe src="https://09468ac23b4f1d16458c3b2b6357e1fa.safeframe.googlesyndication.com/safeframe/1-0-40/html/container.html?n=1"></iframe>
+document.body.appendChild(document.createElement("br"));
 var cryptoRandomIframeForScrollingExample = document.createElement("iframe");
 document.body.appendChild(cryptoRandomIframeForScrollingExample);
 
