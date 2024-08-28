@@ -154,8 +154,11 @@ function onVisibilityChange(el, callback) {
 }
 
 var handler = onVisibilityChange(currentTimeText, function() {
+    if(parseInt(cryptoRandomTextForScrollingExample.innerHTML) > 0)
+        return;
+    
     var stopTime = new Date;
-    var duration = (startTime.getTime() - stopTime.getTime); //The time is in ms
+    var duration = (stopTime.getTime() - startTime.getTime()); //The time is in ms
 
     //Update all of the values for this section
     currentTimeText.innerHTML = currentTimeText.innerHTML + duration.toString() + "ms";
