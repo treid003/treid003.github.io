@@ -140,12 +140,10 @@ function isElementInViewport (el) {
     );
 }
 
-function onVisibilityChange(el, callback) {
-    var oldVisible;
+function isVisibile(el, callback) {
     return function () {
         var visible = isElementInViewport(el);
-        if (visible != oldVisible) {
-            oldVisible = visible;
+        if (visible != false) {
             if (typeof callback == 'function') {
                 callback();
             }
@@ -180,8 +178,5 @@ var handler = onVisibilityChange(currentTimeText, function() {
 });
 
 if (window.addEventListener) {
-    //addEventListener('DOMContentLoaded', handler, false);
-    //addEventListener('load', handler, false);
     addEventListener('scroll', handler, false);
-    //addEventListener('resize', handler, false);
 }
