@@ -180,8 +180,8 @@ var handler = onVisibilityChange(currentTimeText, function() {
 });
 
 if (window.addEventListener) {
-    addEventListener('DOMContentLoaded', handler, false);
-    addEventListener('load', handler, false);
+    //addEventListener('DOMContentLoaded', handler, false);
+    //addEventListener('load', handler, false);
     addEventListener('scroll', handler, false);
-    addEventListener('resize', handler, false);
+    //addEventListener('resize', handler, false);
 }
