@@ -116,11 +116,11 @@ function createCardForButtonExample(cardNumber)
 
     
     var mathRandomLinkForButtonExample = document.createElement("a");
-    mathRandomLinkForScrollingExample.style.display = "inline-block";
-    c1.children[0].children[1].appendChild(mathRandomLinkForScrollingExample);
+    mathRandomLinkForButtonExample.style.display = "inline-block";
+    c1.children[0].children[1].appendChild(mathRandomLinkForButtonExample);
     c1.children[0].children[1].appendChild(document.createElement("br"));
     var mathRandomIframeForButtonExample = document.createElement("iframe");
-    c1.children[0].children[1].appendChild(mathRandomIframeForScrollingExample);
+    c1.children[0].children[1].appendChild(mathRandomIframeForButtonExample);
 
     
     c1.children[0].children[1].appendChild(document.createElement("br"));
@@ -129,12 +129,12 @@ function createCardForButtonExample(cardNumber)
     c1.children[0].children[1].appendChild(currentHeading);
 
     var cryptoRandomLinkForButtonExample = document.createElement("a");
-    cryptoRandomLinkForScrollingExample.style.display = "inline-block";
-    c1.children[0].children[1].appendChild(cryptoRandomLinkForScrollingExample);
+    cryptoRandomLinkForButtonExample.style.display = "inline-block";
+    c1.children[0].children[1].appendChild(cryptoRandomLinkForButtonExample);
 
     c1.children[0].children[1].appendChild(document.createElement("br"));
     var cryptoRandomIframeForButtonExample = document.createElement("iframe");
-    c1.children[0].children[1].appendChild(cryptoRandomIframeForScrollingExample);
+    c1.children[0].children[1].appendChild(cryptoRandomIframeForButtonExample);
 
     //Crete event listner for the onclick event for the button
     var generateRandomValuesForCard = function (){
