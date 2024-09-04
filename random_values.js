@@ -90,11 +90,13 @@ function createCardForButtonExample(cardNumber, buttonClass)
     b1.setAttribute("type", "button");
     b1.className = buttonClass;
     b1.innerHTML = "Generate Random Values";
-    c1.children[0].appendChild(b1);
+    c1.children[0].appendChild(document.createElement("div"));
+    c1.children[0].children[0].className = "container-fluid";
+    c1.children[0].children[0].appendChild(b1);
     c1.children[0].appendChild(document.createElement("br"));
     
     c1.children[0].appendChild(document.createElement("div"));
-    c1.children[0].children[randomDivIndex].className = "container";
+    c1.children[0].children[randomDivIndex].className = "container-fluid";
     currentHeading = createRandomHeading("h4", "Math.random():");
     c1.children[0].children[randomDivIndex].appendChild(currentHeading);
     
@@ -166,7 +168,7 @@ function createCardForButtonExample(cardNumber, buttonClass)
     return c1;
 }
 
-var c1 = createCardForButtonExample("1", "btn bnt-primary");
+var c1 = createCardForButtonExample("1", "btn btn-primary");
 document.body.appendChild (c1);
 var c2 = createCardForButtonExample("2", "btn btn-success");
 document.body.appendChild (c2);
